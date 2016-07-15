@@ -1,6 +1,7 @@
 from tkinter import *
 from firstInterface import first
 from startNewInterface import startNew
+import xmlReader
 
 window1 = Tk()
 firstW = first(window1)
@@ -12,6 +13,12 @@ if firstW.start:
 	window2.mainloop()
 	if startN.isOk:
 		print("ahahha")
+		refNameList, refGap = xmlReader.readXML(startN.xmlFilePath, startN.xmlFileName)
+		print(refNameList)
+		print(refGap)
+		refNameRepeats = xmlReader.checkRepeats(refNameList)
+		print(refNameRepeats)
+
 
 elif firstW.importSheet:
 	print("yes")
