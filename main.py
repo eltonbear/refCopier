@@ -1,6 +1,6 @@
 from tkinter import *
 from firstInterface import first
-from startNewInterface import startNew
+from browseInterface import browse
 from xmlInfo import writeInfoText
 from startExcelSheet import startNewExcelSheet
 import xmlReader
@@ -11,12 +11,13 @@ firstW = first(window1)
 window1.mainloop()
 
 if firstW.start:
+	### It's xml file
 	window2 = Tk()
-	startN= startNew(window2)
+	startN= browse(window2, True)
 	window2.mainloop()
 	if startN.isOk:
 		print("ahahha")
-		refNameList, refGap, wireList = xmlReader.readXML(startN.xmlFilePath, startN.xmlFileName)
+		refNameList, refGap, wireList = xmlReader.readXML(startN.filePath, startN.fileName)
 		print(refNameList)
 		print(refGap)
 		refNameRepeats = xmlReader.checkRepeats(refNameList)
@@ -24,14 +25,16 @@ if firstW.start:
 		if refNameRepeats:
 			### creat info files when there is a repeat
 			print("there is repeat")
-			writeInfoText(startN.xmlFilePath, startN.xmlFolderPath, startN.xmlFileName, refNameRepeats, refNameList, refGap, wireList)
+			writeInfoText(startN.filePath, startN.folderPath, startN.fileName, refNameRepeats, refNameList, refGap, wireList)
 		else:
 			### write excel sheet
 			print("no repaets")
-			startNewExcelSheet(startN.xmlFilePath, startN.xmlFolderPath, startN.xmlFileName, refNameList, refGap, wireList)
-
-
+			startNewExcelSheet(startN.filePath, startN.folderPath, startN.fileName, refNameList, refGap, wireList)
 
 
 elif firstW.importSheet:
+	### It's xlsx file
 	print("yes")
+	window2 = Tk()
+	importS= browse(window2, False)
+	window2.mainloop()
