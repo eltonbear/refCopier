@@ -2,6 +2,7 @@ from tkinter import *
 from firstInterface import first
 from startNewInterface import startNew
 from xmlInfo import writeInfoText
+from startExcelSheet import startNewExcelSheet
 import xmlReader
 
 
@@ -27,6 +28,8 @@ if firstW.start:
 		else:
 			### write excel sheet
 			print("no repaets")
+			startNewExcelSheet(startN.xmlFilePath, startN.xmlFolderPath, startN.xmlFileName, refNameList, refGap, wireList)
+
 
 
 
