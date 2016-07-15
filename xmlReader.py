@@ -3,6 +3,7 @@ from xml.etree.ElementTree import ElementTree, Element, SubElement
 import re
 
 def readXML(xmlFilePath, xmlFileName):
+	### check format
 	try:
 		tree = ET.parse(xmlFilePath)                                    
 	except ET.ParseError:                       
@@ -12,7 +13,7 @@ def readXML(xmlFilePath, xmlFileName):
 	root = tree.getroot() 
 	referenceE = root.findall('ReferenceSystem')
 	wireE = root.findall('Wire')
-
+	### check format
 	if not referenceE or not wireE:
 		fileFormatIncorrectWarning()
 		return None
@@ -37,10 +38,10 @@ def readXML(xmlFilePath, xmlFileName):
 		else:
 			prevNum = int(numberS)
 		
-	return refName, refNameGap
+	return refName, refNameGap, wireE
 
 def checkRepeats(refNameList):
-	''' Check any repeating reference. Return a list of lists of a name of repeating ref(str) and count(int)'''
+	''' Check if there is any repeating reference. Return a list of lists of a name of repeating ref(str) and count(int)'''
 	repeat = []
 	singles = set(refNameList)
 	for s in singles:
@@ -50,7 +51,7 @@ def checkRepeats(refNameList):
 	return repeat
 		
 def fileFormatIncorrectWarning(fileName):
-	messagebox.showinfo("Warning", "File: " + fileName + " - format incorrect!")
+	messagebox.showinfo("Warning", "File: " + fileName + " - format incorrect!") #### maybe make another interface
 
 
 
