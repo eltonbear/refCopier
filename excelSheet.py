@@ -107,7 +107,7 @@ class excelSheet():
 		excelName = []
 		excelRef = []
 		excelType = []
-		missingRef = [] ### [row, name]
+		missingRef = []
 		missingType = []
 		wrongSeqRow = []
 		checkRepeatRef = set()
@@ -126,50 +126,55 @@ class excelSheet():
 					excelRef.append(ref)
 					excelType.append(typ)
 				else:
-					if not ref or ref == 'None': ###################################### error message
+					if not ref or ref == 'None':
 						missingRef.append(row)
 					if not typ or typ == 'None':
 						missingType.append(row)
 				if tagCo[int(row)].value == self.appendTag:
 					gap = False
 			else: ### append
-				if ref and typ and prevBothNotEmpty and ref != 'None' and typ != 'None':
+				if ref and typ and  ref != 'None' and typ != 'None' and prevBothNotEmpty:
 					excelName.append(name)
 					excelRef.append(ref)
 					excelType.append(typ)
 				elif (not ref or ref == 'None') and typ and typ != 'None' and prevBothNotEmpty:
-					missingRef.append(row)                 ######## error message
+					missingRef.append(row)              
 				elif (not typ or typ != 'None') and ref and ref != 'None' and prevBothNotEmpty:
-					missingType.append(row)                ######## error message
-				else:
-					if prevBothNotEmpty:
-						prevBothNotEmpty = False
-					else:
-						wrongSeqRow.append(row)
-						prevBothNotEmpty = True
+					missingType.append(row)
+				elif prevBothNotEmpty:
+					prevBothNotEmpty = False
+				elif (ref and ref != 'None') or (typ and typ != 'None'):
+					wrongSeqRow.append(row)
+					prevBothNotEmpty = True
+					if not (ref and ref != 'None'):
+						missingRef.append(row)
+					elif not (typ and typ != 'None'):
+						missingType.append(row)
 
 			### chcek repeats
 			if ref != 'None' and ref:
 				if ref in temp and not ref in repeat:
 					repeat[ref] = temp[ref]
 					repeat[ref].append(row)
+				elif ref in temp and ref in repeat:
+					repeat[ref].append(row)
 				else:
 					temp[ref] = [row]
 
 			row = str(int(row) + 1)
-		# print(excelName)
-		# print(excelRef)
-		# print(excelType)
-		# print(wrongSeqRow)
-		# print(repeat)
-		# print(missingRef)
-		# print(missingType)
-		error = False
+			
+		print(excelName)
+		print(excelRef)
+		print(excelType)		
+		print(missingRef)
+		print(missingType)
+		print(repeat)
+		print(wrongSeqRow)
+		errorMessage = None
 		if missingRef or missingType or repeat or wrongSeqRow:
-			error = True
-		pack = [error, missingRef, missingType, repeat, wrongSeqRow]
-		print(error)
-		return xmlFilePath, excelName, excelRef, excelType, pack
+			errorMessage = writeErrorMessage(missingRef, missingType, repeat, wrongSeqRow)
+			print(errorMessage)
+		return xmlFilePath, excelName, excelRef, excelType, errorMessage
 
 def writeGapsName(sheet, referenceGap, format1, format2, format3, nameColumn, gapTagColumn, startingRow, gapTag):
 	row = startingRow
@@ -188,24 +193,35 @@ def writeAppendName(sheet, refNameToAppend, firstAppendRow, lastAppendRow, nameC
 		sheet.write(nameColumn + str(row), str(refNameToAppend), format1)
 		refNameToAppend +=1
 
+def writeErrorMessage(missingRefRow, missingTypeRow, repeatRefRow, wrongSequenceRow):
+	message = ""
+	if missingRefRow:
+		message = message + "Missing Reference Number at Row: "
+		for i in range(0, len(missingRefRow) - 1):
+			message = message + missingRefRow[i] + ", "
+		message = message + missingRefRow[-1] + "\n\n"
 
+	if missingTypeRow:
+		message = message + "Missing Reference Type at Row: "
+		for i in range(0, len(missingTypeRow) - 1):
+			message = message + missingTypeRow[i] + ", "
+		message = message + missingTypeRow[-1] + "\n\n"
 
+	if repeatRefRow:
+		for ref in sorted(repeatRefRow.keys()):
+			message = message + "R" + ref + " is repeated at row: "
+			for i in range(0, len(repeatRefRow[ref]) -1):
+				message = message + repeatRefRow[ref][i] + ", "
+			message = message + repeatRefRow[ref][-1] + "\n"
+		message = message + "\n"
 
+	if wrongSequenceRow:
+		message = message + "Sequence incorrect at row: "
+		for i in range(0, len(wrongSequenceRow) - 1):
+			message = message + wrongSequenceRow[i] + ", "
+		message = message + wrongSequenceRow[-1] + "\n" 
 
-
+	return message
 	
-test = excelSheet()
-test.readExcelSheet(r"C:\Users\eltoshon\Desktop\programTestiing\xmltest1_instruction.xlsx")
-	
-
-
-
-
-
-
-
-
-
-
-
-
+# test = excelSheet()
+# test.readExcelSheet(r"C:\Users\eltoshon\Desktop\programTestiing\xmltest1_instruction.xlsx")

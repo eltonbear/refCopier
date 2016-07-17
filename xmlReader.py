@@ -40,7 +40,7 @@ def readXML(xmlFilePath, xmlFileName):
 		else:
 			prevNum = int(numberS)
 		
-	return refName, refNameGap, wireE
+	return refName, refNameGap, referenceE, wireE, tree
 
 def checkRepeats(refNameList):
 	''' Check if there is any repeating reference. Return a list of lists of a name of repeating ref(str) and count(int)'''

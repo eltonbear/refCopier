@@ -59,12 +59,12 @@ class browse(Frame):
 			self.incorrectFileNameWarning()
 		else:
 			self.isOk = True
-			self.getFolderAndFileName()	
+			self.folderPath, self.fileName = splitFileFolderAndName(self.filePath)	
 			self.closeWindow()
 
-	def getFolderAndFileName(self):
-		self.folderPath, self.fileName = split(self.filePath)
-		self.fileName = splitext(self.fileName)[0]
+	# def getFolderAndFileName(self):
+	# 	self.folderPath, self.fileName = split(self.filePath)
+	# 	self.fileName = splitext(self.fileName)[0]
 
 	def incorrectFileNameWarning(self):
 		messagebox.showinfo("Warning", "File does not exist!")
@@ -74,3 +74,8 @@ class browse(Frame):
 
 	def fileFormatIncorrectWarning(self):
 		messagebox.showinfo("Warning", "File: " + self.fileName + " - format incorrect!")
+
+
+def splitFileFolderAndName(filePath):
+	folderPath, fileName = split(filePath)
+	return folderPath, splitext(fileName)[0]
