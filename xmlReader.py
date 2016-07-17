@@ -30,10 +30,12 @@ def readXML(xmlFilePath, xmlFileName):
 		if i > 0:
 			currNum = int(numberS)
 			if currNum - prevNum > 1:
-				if prevNum + 1 == currNum - 1:
-					refNameGap.append([prevNum + 1])
-				else:
-					refNameGap.append([prevNum + 1, currNum - 1])
+				# if prevNum + 1 == currNum - 1:
+				# 	refNameGap.append([prevNum + 1])
+				# else:
+				# 	refNameGap.append([prevNum + 1, currNum - 1])
+				for missing in range(prevNum + 1, currNum):
+					refNameGap.append(str(missing))
 			prevNum = currNum
 		else:
 			prevNum = int(numberS)

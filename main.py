@@ -2,7 +2,7 @@ from tkinter import *
 from firstInterface import first
 from browseInterface import browse
 from xmlInfo import writeInfoText
-from startExcelSheet import excelSheet
+from excelSheet import excelSheet
 import xmlReader
 
 
@@ -29,8 +29,8 @@ if firstW.start:
 		else:
 			### write excel sheet
 			print("no repaets")
-			excel = excelSheet()
-			excel.startNewExcelSheet(startN.filePath, startN.folderPath, startN.fileName, refNameList, refGap, wireList)
+			excelWrite = excelSheet()
+			excelWrite.startNewExcelSheet(startN.filePath, startN.folderPath, startN.fileName, refNameList, refGap, wireList)
 
 
 elif firstW.importSheet:
@@ -39,3 +39,13 @@ elif firstW.importSheet:
 	window2 = Tk()
 	importS= browse(window2, False)
 	window2.mainloop()
+	if importS.isOk:
+		excelRead = excelSheet()
+		xmlPath, excelNam, excelRef, excelTyp, errorPack = excelRead.readExcelSheet(importS.filePath)
+		if error[0]:
+			#### call error messager
+		else:
+			### call xml modifier
+
+		# refNameList, refGap, wireList = xmlReader.readXML(startN.filePath, startN.fileName)
+
