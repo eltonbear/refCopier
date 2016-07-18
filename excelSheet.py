@@ -113,7 +113,7 @@ class excelSheet():
 		checkRepeatRef = set()
 		temp = {}
 		repeat = {}
-		gap = True
+		gap = tagCo[int(row)].value == self.gapTag
 		prevBothNotEmpty = True
 		while int(row) <= lastRow: 
 			name = worksheet[self.nameC + row].value
@@ -162,7 +162,7 @@ class excelSheet():
 					temp[ref] = [row]
 
 			row = str(int(row) + 1)
-			
+
 		print(excelName)
 		print(excelRef)
 		print(excelType)		

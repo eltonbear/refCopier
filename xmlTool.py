@@ -102,17 +102,13 @@ def modifier(xmlFolderPath, xmlFileName, refList, nameList, typeList, referenceE
 				if 'R' + refList[n] == r.find('Name').text:
 					print("im here")
 					copy = writeARefCopy(r, refList[n], nameList[n], typeList[n])
-					root.insert(int(nameList[n])-1, copy) ################## error caused by insert with random index??
+					root.insert(int(nameList[n])-1, copy) 							################## error caused by insert with random index??
 					break
 
 		### change wire's des		
 		modifyWireDesRef(refList[n], nameList[n], wireE)
-
 	### write to a new xml file
-	if xmlFileName[-1].isdigit() and xmlFileName[-5:-1] == "_new":
-		newXmlFilePath = xmlFolderPath + "/" + xmlFileName[0:-1] + str(int(xmlFileName[-1])+1) + ".xml"
-	else:
-		newXmlFilePath = xmlFolderPath + "/" + xmlFileName + "_new1.xml"
+	newXmlFilePath = xmlFolderPath + "/" + xmlFileName + "_new.xml"
 	tree.write(newXmlFilePath)
 	return newXmlFilePath
 
