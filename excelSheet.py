@@ -21,7 +21,7 @@ class excelSheet():
 
 	def startNewExcelSheet(self, xmlFilePath, xmlFolderPath, xmlFileName, refNumList, refGap, wireList):
 		xlsxFileName = xmlFileName + '_instruction.xlsx'
-		xmlFilePath = xmlFilePath
+		xmlPath = xmlFilePath
 		xlsxFilePath = xmlFolderPath + '/' + xlsxFileName
 		workbook = xlsxwriter.Workbook(xlsxFilePath)
 		worksheet = workbook.add_worksheet(self.workSheetName)
@@ -45,7 +45,7 @@ class excelSheet():
 		worksheet.set_column(self.wireTagCell[0] + ':' + self.wireTagCell[0], 10)
 
 		# Write a tags with different formats
-		worksheet.write(self.xmlFilePathCell, 'XML: ' + xmlFilePath)
+		worksheet.write(self.xmlFilePathCell, 'XML: ' + xmlPath)
 		worksheet.write(self.nameC + self.titleRow, "New Name", leftBottomBorder)
 		worksheet.write(self.refC + self.titleRow, "Reference to Copy (R" + refNumList[0] + " - R" + refNumList[-1] + ")", bottomBorder)
 		worksheet.write(self.typeC + self.titleRow, "Reference Type", bottomBorder)
@@ -86,12 +86,12 @@ class excelSheet():
 			                                 											       'error_message': 'Reference does not exist!',
 			                                 											       'error_type': 'stop'} )
 		
-		worksheet.data_validation(self.nameC + fstAppendRow + ':' + self.nameC + lstAppendRow, {'validate': 'integer',          
-			                                 											        'criteria': '>',
-			                                 											        'value': int(refNumList[-1]),
-			                                 											        'error_title': 'Warning',
-			                                 											        'error_message': 'Reference number too small or format incorrect!',
-			                                 											        'error_type': 'stop'} )
+		# worksheet.data_validation(self.nameC + fstAppendRow + ':' + self.nameC + lstAppendRow, {'validate': 'integer',          
+		# 	                                 											        'criteria': '>',
+		# 	                                 											        'value': int(refNumList[-1]),
+		# 	                                 											        'error_title': 'Warning',
+		# 	                                 											        'error_message': 'Reference number too small or format incorrect!',
+		# 	                                 											        'error_type': 'stop'} )
 		
 		try:
 			workbook.close()

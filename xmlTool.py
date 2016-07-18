@@ -21,13 +21,18 @@ def readXML(xmlFilePath, xmlFileName):
 
 	refName = [] #str
 	refNameGap = [] #list of lists of int(single or pair)
+	dependon = []
 	numOfwire = len(wireE)
 	numOfRef = len(referenceE)
 
 	### obtain gaps
 	for i in range(0, numOfRef):
 		numberS = re.findall('\d+', referenceE[i].find('Name').text)[0]
+		depS = referenceE[i].find('Dependon')
+		if depS != None:
+			depS = re.findall('\d+', depS.text)[0]
 		refName.append(numberS)
+		dependon.append(depS)
 		if i > 0:
 			currNum = int(numberS)
 			if currNum - prevNum > 1:
@@ -37,7 +42,7 @@ def readXML(xmlFilePath, xmlFileName):
 		else:
 			prevNum = int(numberS)
 		
-	return refName, refNameGap, referenceE, wireE, tree
+	return refName, refNameGap, dependon, referenceE, wireE, tree
 
 def checkRepeats(refNameList):
 	''' Check if there is any repeating reference. Return a list of lists of a name of repeating ref(str) and count(int)'''
