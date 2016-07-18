@@ -3,8 +3,7 @@ from firstInterface import first
 from browseInterface import browse, splitFileFolderAndName
 from excelSheet import excelSheet
 from warningWindow import errorMessage
-import xmlReader
-import xmlModifier
+import xmlTool
 from io import open
 from os import startfile
 
@@ -18,14 +17,14 @@ if firstW.start:
 	startN= browse(window2, True)
 	window2.mainloop()
 	if startN.isOk:
-		refNameList, refGap, referenceList, wireList, tree = xmlReader.readXML(startN.filePath, startN.fileName)
-		refNameRepeats = xmlReader.checkRepeats(refNameList)
+		refNameList, refGap, referenceList, wireList, tree = xmlTool.readXML(startN.filePath, startN.fileName)
+		refNameRepeats = xmlTool.checkRepeats(refNameList)
 		print(refNameList)
 		print(refGap)
 		print(refNameRepeats)
 		if refNameRepeats:
 			### creat info files when there is a repeat                
-			info = xmlReader.XMLInfo(startN.filePath, startN.fileName, refNameRepeats, refNameList, refGap, wireList)
+			info = xmlTool.XMLInfo(startN.filePath, startN.fileName, refNameRepeats, refNameList, refGap, wireList)
 			errorFilePath = startN.folderPath+ '/' +  startN.fileName + '_info.txt'
 			infoWindow = Tk()
 			warning = errorMessage(infoWindow, info, errorFilePath, True)
@@ -58,7 +57,7 @@ elif firstW.importSheet:
 		else:
 			### call xml modifier
 			xmlFolder, xmlFileName = splitFileFolderAndName(xmlPath)
-			refNameList, refGap, referenceList, wireList, tree = xmlReader.readXML(xmlPath, xmlFileName)           						##### merge xmlreader and modifer
-			newXmlFilePath = xmlModifier.modifier(xmlFolder, xmlFileName, excelRef, excelNam, excelTyp, referenceList,  wireList, tree)
+			refNameList, refGap, referenceList, wireList, tree = xmlTool.readXML(xmlPath, xmlFileName)           						##### merge xmlreader and modifer
+			newXmlFilePath = xmlTool.modifier(xmlFolder, xmlFileName, excelRef, excelNam, excelTyp, referenceList,  wireList, tree)
 			startfile(newXmlFilePath)
 
