@@ -1,12 +1,14 @@
 from tkinter import *
+from io import open
+from os import startfile
 
 class errorMessage(Frame):
-	def __init__(self, parent, message):
-		# Frame.__init__(self, parent, width = 500)
+	def __init__(self, parent, message, textFilePath, saveOption):
 		self.parent = parent
 		self.message = message
-		self.isSaved = False
+		self.textFilePath = textFilePath
 		self.isOk = False
+		self.saveBuntton = saveOption
 		self.initGUI()
 
 	def initGUI(self):
@@ -18,27 +20,25 @@ class errorMessage(Frame):
 		self.makeButtons()
 		####
 		var = StringVar()
-		label = Message(self.messageFrame, textvariable=var, relief=RAISED, width = 550)
+		label = Message(self.messageFrame, textvariable=var, relief=RAISED, width = 1000)
 		var.set(self.message)
 		label.pack(fill = BOTH, expand = True)
 
 	def makeButtons(self):
 		### Create buttons for Cancel, Ok, and Browse and set their positions
-		bSave = Button(self.buttonFrame, text = "Save", width = 5, command = self.save)
-		bSave.pack(side = RIGHT,padx=5, pady=2)
-		bOk = Button(self.buttonFrame, text = "Ok", width = 5, command = self.OK)
+		if self.saveBuntton:
+			bSave = Button(self.buttonFrame, text = "Save", width = 5, command = self.writeToText)
+			bSave.pack(side = RIGHT, padx=5, pady=2)
+		bOk = Button(self.buttonFrame, text = "Ok", width = 5, command = self.parent.destroy)
 		bOk.pack(side = RIGHT, padx=3, pady=2)
 
-	def closeWindow(self):
+	def writeToText(self):
+		file = open(self.textFilePath,'w')
+		file.write(self.message)
+		file.close()
+		startfile(self.textFilePath)
 		self.parent.destroy()
 
-	def OK(self):
-		self.isOk = True
-		self.parent.destroy()
-
-	def save(self):
-		self.isSaved = True
-		self.parent.destroy()
 
 	
 

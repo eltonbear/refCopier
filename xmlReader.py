@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 import re
+from os.path import exists
 
 def readXML(xmlFilePath, xmlFileName):
 	### check format
@@ -30,10 +31,6 @@ def readXML(xmlFilePath, xmlFileName):
 		if i > 0:
 			currNum = int(numberS)
 			if currNum - prevNum > 1:
-				# if prevNum + 1 == currNum - 1:
-				# 	refNameGap.append([prevNum + 1])
-				# else:
-				# 	refNameGap.append([prevNum + 1, currNum - 1])
 				for missing in range(prevNum + 1, currNum):
 					refNameGap.append(str(missing))
 			prevNum = currNum
@@ -51,6 +48,41 @@ def checkRepeats(refNameList):
 		if count > 1:
 			repeat.append([s, count])
 	return repeat
+
+
+def XMLInfo(xmlFilePath, xmlFileName, repRef, refName, refGap, wireList):
+	numR = len(refName)
+	numW = len(wireList)
+
+	if exists(xmlFilePath):
+		info = ""
+		### write file path		
+		info = info + "#Input XML File: " + xmlFilePath + '\n\n'
+		### write repeating ref name if there is any
+		info = info + "#Repeating Reference:\n"
+		if repRef:
+			for r in repRef:
+				info = info + "There are " + str(r[1]) + " R" + r[0] + '\n'
+		else:
+			info  = info + "None\n"
+		### write first and last ref name
+		info = info + "\n#First Reference: R" + refName[0] + '\n'
+		info = info + "#Last Reference:  R" + refName[numR-1] + '\n'
+		### write refernce gaps
+		info = info + "\n#Range of Gaps (included):\n"
+		if refGap:
+			for g in refGap:
+				if len(g) == 1:
+					info = info + "R" + str(g[0]) + '\n'
+				else:
+					info = info + "R" + str(g[0]) + ' - R' + str(g[1]) + '\n'
+		else:
+			info = info + "None\n"
+		info = info + "\n#Number of Wires: " + str(numW) + "\n"
+	else:
+		info = "File does not exist!"
+
+	return info
 		
 def fileFormatIncorrectWarning(fileName):
 	messagebox.showinfo("Warning", "File: " + fileName + " - format incorrect!") #### maybe make another interface

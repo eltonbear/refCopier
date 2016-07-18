@@ -9,7 +9,6 @@ def writeInfoText(xmlFilePath, xmlFolderPath, xmlFileName, repRef, refName, refG
 	numR = len(refName)
 	numW = len(wireList)
 
-
 	if exists(xmlFolderPath):
 		info = open(infoFilePath, "w")
 		### write file path		
