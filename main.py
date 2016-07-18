@@ -1,4 +1,4 @@
-from tkinter import *
+from tkinter import Tk
 from firstInterface import first
 from browseInterface import browse, splitFileFolderAndName
 from excelSheet import excelSheet
@@ -32,14 +32,8 @@ if firstW.start:
 		else:
 			### write excel sheet
 			excelWrite = excelSheet()
-			try:
-				excelWrite.startNewExcelSheet(startN.filePath, startN.folderPath, startN.fileName, refNameList, refGap, wireList)
-			except PermissionError:
-				message = "Please close the existing Excel Sheet!"
-				closeFileWindow = Tk()
-				warning = errorMessage(closeFileWindow, message, None, False)
-				closeFileWindow.mainloop()
-
+			excelWrite.startNewExcelSheet(startN.filePath, startN.folderPath, startN.fileName, refNameList, refGap, wireList)
+			
 elif firstW.importSheet:
 	### It's xlsx file
 	window2 = Tk()

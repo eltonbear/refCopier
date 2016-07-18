@@ -1,6 +1,8 @@
 import xlsxwriter
+from tkinter import Tk
 from os import startfile
 import openpyxl as op
+from warningWindow import errorMessage
 
 class excelSheet():
 	def __init__(self):
@@ -25,7 +27,7 @@ class excelSheet():
 		worksheet = workbook.add_worksheet(self.workSheetName)
 		
 		# Create some cell formats with protection properties.
-		# locked = workbook.add_format({'locked': 1})
+		locked = workbook.add_format({'locked': 1})
 		unlocked = workbook.add_format({'locked': 0, 'valign': 'vcenter', 'align': 'center'})
 		center = workbook.add_format({'valign': 'vcenter', 'align': 'center'})
 		border =  workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bottom': 5, 'top': 5, 'right': 5})
@@ -67,6 +69,11 @@ class excelSheet():
 		worksheet.merge_range(self.gapTagCell[0] + fstAppendRow + ':' + self.gapTagCell[0] + lstAppendRow, self.appendTag, right)
 		writeAppendName(worksheet, int(refNumList[-1]) + 1 , fstAppendRow, lstAppendRow, self.nameC, center)
 
+		### protect rows after the append section
+		worksheet.set_row(int(lstAppendRow), None, locked)
+		worksheet.set_row(int(lstAppendRow) + 1, None, locked)
+		worksheet.set_row(int(lstAppendRow) + 2, None, locked)
+
 		### write comment
 		worksheet.write_comment(self.refC + self.titleRow, 'Input any name of a existing refernce in the XML file (number only)')
 		worksheet.write_comment(self.gapTagCell, 'Must fill out all gaps')
@@ -85,9 +92,17 @@ class excelSheet():
 			                                 											        'error_title': 'Warning',
 			                                 											        'error_message': 'Reference number too small or format incorrect!',
 			                                 											        'error_type': 'stop'} )
-		workbook.close()
-		startfile(xlsxFilePath)
+		
+		try:
+			workbook.close()
+		except PermissionError:
+			message = "Please close the existing Excel Sheet!"
+			closeFileWindow = Tk()
+			warning = errorMessage(closeFileWindow, message, None, False)
+			closeFileWindow.mainloop()
 
+		startfile(xlsxFilePath)
+		
 	def readExcelSheet(self, xlsxFilePath):
 		excelName = []
 		excelRef = []
@@ -96,7 +111,10 @@ class excelSheet():
 		try:
 			worksheet = workbook.get_sheet_by_name(self.workSheetName)
 		except keyError:
-			print("cant not find sheet") #########error massage
+			message = "Cannot find excel sheet!"
+			cantFindSheetWindow = Tk()
+			warning = errorMessage(cantFindSheetWindow, message, None, False)
+			cantFindSheetWindow.mainloop()
 			return None
 		
 		xmlFilePath = worksheet[self.xmlFilePathCell].value[5:]
@@ -163,13 +181,13 @@ class excelSheet():
 
 			row = str(int(row) + 1)
 
-		print(excelName)
-		print(excelRef)
-		print(excelType)		
-		print(missingRef)
-		print(missingType)
-		print(repeat)
-		print(wrongSeqRow)
+		# print(excelName)
+		# print(excelRef)
+		# print(excelType)		
+		# print(missingRef)
+		# print(missingType)
+		# print(repeat)
+		# print(wrongSeqRow)
 		errorMessage = None
 		if missingRef or missingType or repeat or wrongSeqRow:
 			errorMessage = writeErrorMessage(missingRef, missingType, repeat, wrongSeqRow)

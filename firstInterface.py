@@ -16,12 +16,15 @@ class first(Frame):
 
 	def makeButtons(self):
 		### Create buttons for Cancel, Ok, and Browse and set their positions
-		bStart = Button(self.buttonFrame, text = "Start New", width = 10, command = self.startNew)
-		bStart.pack(pady = 2)
-		bImport = Button(self.buttonFrame, text = "Import Sheet", width = 15,command = self.importSheet)
-		bImport.pack(pady = 2)
 		bCancel = Button(self.buttonFrame, text = "Cancel", width = 10 ,command = self.closeWindow)
-		bCancel.pack(pady = 2)	
+		bCancel.pack(side = RIGHT, padx = 5, pady = 5)
+		bImport = Button(self.buttonFrame, text = "Import Sheet", width = 15,command = self.importSheet)
+		bImport.pack(side = RIGHT, padx = 5, pady = 5)
+		bStart = Button(self.buttonFrame, text = "Start New", width = 10, command = self.startNew)
+		bStart.pack(side = RIGHT, padx = 5, pady = 5)
+		
+		
+		
 
 	def closeWindow(self):
 		self.parent.destroy()
