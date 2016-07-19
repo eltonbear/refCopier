@@ -6,6 +6,8 @@ from warningWindow import errorMessage
 import xmlTool
 from io import open
 from os import startfile
+from util import splitFileFolderAndName
+
 
 window1 = Tk()
 firstW = first(window1)
@@ -24,17 +26,17 @@ if firstW.start:
 		print(depList)
 		print(refNameRepeats)
 		if refNameRepeats:
-			### creat info files when there is a repeat                
-			info = xmlTool.XMLInfo(startN.filePath, startN.fileName, refNameRepeats, refNameList, refGap, wireList)
-			errorFilePath = startN.folderPath+ '/' +  startN.fileName + '_info.txt'
+			### creat info files when there is a repeat            
+			info = xmlTool.XMLInfo(startN.filePath, refNameRepeats, refNameList, refGap, wireList)
+			folderPath, fileName = splitFileFolderAndName(startN.filePath)
+			errorFilePath = folderPath + '/' +  fileName + '_info.txt'
 			infoWindow = Tk()
 			warning = errorMessage(infoWindow, info, errorFilePath, True)
 			infoWindow.mainloop()
 		else:
 			### write excel sheet
 			excelWrite = excelSheet()
-			# excelWrite.startNewExcelSheet(startN.filePath, startN.folderPath, startN.fileName, refNameList, refGap, wireList)
-			excelWrite.startNewExcelSheet(startN.filePath, startN.folderPath, startN.fileName, refNameList, refGap, typeList, depList, wireList) ### for V2
+			excelWrite.startNewExcelSheet(startN.filePath, refNameList, refGap, typeList, depList, wireList)
 			
 elif firstW.importSheet:
 	### It's xlsx file
@@ -46,7 +48,8 @@ elif firstW.importSheet:
 		xmlPath, refExcelDict, error = excelRead.readExcelSheet(importS.filePath)
 		if error:
 			#### call error messager
-			errorFilePath = importS.folderPath+ '/' +  importS.fileName + '_error.txt'
+			folderPath, fileName = splitFileFolderAndName(importS.filePath)
+			errorFilePath = folderPath + '/' + fileName + '_error.txt'
 			errorWindow = Tk()
 			warning = errorMessage(errorWindow, error, errorFilePath, True)
 			errorWindow.mainloop()

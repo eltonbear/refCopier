@@ -13,7 +13,7 @@ def readXML(xmlFilePath):
 
 	### check format
 	if not referenceE or not wireE:
-		fileFormatIncorrectWarning()
+		fileFormatIncorrectWarning(xmlFileName)
 		return None
 
 	refName = [] #str
@@ -67,7 +67,7 @@ def checkRepeats(refNameList):
 	return repeat
 
 
-def XMLInfo(xmlFilePath, xmlFileName, repRef, refName, refGap, wireList):
+def XMLInfo(xmlFilePath, repRef, refName, refGap, wireList):
 	numR = len(refName)
 	numW = len(wireList)
 

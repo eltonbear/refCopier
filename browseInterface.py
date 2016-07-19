@@ -9,8 +9,6 @@ class browse(Frame):
 		Frame.__init__(self, parent, width = 1000)
 		self.parent = parent
 		self.filePath = ""
-		self.folderPath = ""
-		self.fileName = "" # with no extension
 		self.filePathEntry = None
 		self.isOk = False
 		self.isXmlNotXlsx = isXML
@@ -61,7 +59,6 @@ class browse(Frame):
 			self.incorrectFileNameWarning()
 		else:
 			self.isOk = True
-			self.folderPath, self.fileName = splitFileFolderAndName(self.filePath)	
 			self.closeWindow()
 
 	def incorrectFileNameWarning(self):
@@ -70,8 +67,8 @@ class browse(Frame):
 	def emptyFileNameWarning(self):
 		messagebox.showinfo("Warning", "No files selected!")
 
-	def fileFormatIncorrectWarning(self):
-		messagebox.showinfo("Warning", "File: " + self.fileName + " - format incorrect!")
+	def fileFormatIncorrectWarning(self, fileName):
+		messagebox.showinfo("Warning", "File: " + fileName + " - format incorrect!")
 
 
 

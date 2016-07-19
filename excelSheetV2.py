@@ -3,6 +3,7 @@ from tkinter import Tk
 from os import startfile
 import openpyxl as op
 from warningWindow import errorMessage
+from util import splitFileFolderAndName
 
 class excelSheet():
 	def __init__(self):
@@ -24,9 +25,9 @@ class excelSheet():
 		self.copyBlockedText = 'BLOCKED'
 		self.dependNoneText = "none"
 
-	def startNewExcelSheet(self, xmlFilePath, xmlFolderPath, xmlFileName, refNumList, refGap, typeList, depList, wireList): #######3 use util maybe!!!!!!
+	def startNewExcelSheet(self, xmlFilePath, refNumList, refGap, typeList, depList, wireList): #######3 use util maybe!!!!!!
+		xmlFolderPath, xmlFileName = splitFileFolderAndName(xmlFilePath)
 		xlsxFileName = xmlFileName + '_instruction.xlsx'
-		xmlPath = xmlFilePath
 		xlsxFilePath = xmlFolderPath + '/' + xlsxFileName
 		workbook = xlsxwriter.Workbook(xlsxFilePath)
 		worksheet = workbook.add_worksheet(self.workSheetName)
@@ -64,13 +65,13 @@ class excelSheet():
 		worksheet.write(self.depC + self.titleRow, 'Dependent On (R)', titleF)
 		worksheet.write(self.wireTagCell, "Wire Count", centerF)
 		worksheet.write(self.wireCountCell, len(wireList), centerF)
-		worksheet.write(self.xmlFilePathCell, 'XML: ' + xmlPath)
+		worksheet.write(self.xmlFilePathCell, 'XML: ' + xmlFilePath)
 
 		### write rows
 		lastRefRow = int(self.titleRow) + int(refNumList[-1])
 		fstAppendRow = str(int(lastRefRow) + 1)
 		lastAppendRow = str(int(lastRefRow) + len(refNumList) - len(refGap))
-		refNumber = 1		
+		refNumber = 1	
 		refListIndex = 0
 		for rowN in range(int(self.firstInputRow), int(lastAppendRow) + 1):
 			rowS = str(rowN)
@@ -146,15 +147,12 @@ class excelSheet():
 		allCopy = {}
 		repeat = {}
 		row  = self.firstInputRow
-		# statusCo = worksheet.columns[0]
-		# lastRow = len(statusCo)
-		# IsAppend = statusCo[int(row)].value == self.appendTag
 		prevAllExist = True
 		error = False
 		while int(row) <= int(lastRow): 
 			status = worksheet[self.statusC + row].value
 			ref = str(worksheet[self.refC + row].value)
-			copy = worksheet[self.copyC + row].value
+			copy = str(worksheet[self.copyC + row].value)
 			typ = worksheet[self.typeC + row].value
 			dep = str(worksheet[self.depC + row].value)
 
@@ -189,6 +187,7 @@ class excelSheet():
 						excelReference.append(reference)
 					elif refExists and not copyExists and not typeExists and not depExists:
 						prevAllExist = False
+						print(row)
 					else:
 						if not refExists:
 							missingRef.append(row)
@@ -211,9 +210,8 @@ class excelSheet():
 						missingDep.append(row) 
 					prevAllExist = True
 					error = True
-
 			### chcek repeats
-			if copy != 'None' and copy and type(copy) == int:
+			if copy != 'None' and copy:
 				if copy in allCopy and not copy in repeat:
 					repeat[copy] = allCopy[copy]
 					repeat[copy].append(row)
@@ -224,24 +222,24 @@ class excelSheet():
 					allCopy[copy] = [row]
 
 			row = str(int(row) + 1)
-		print('Missing: ')
-		print(missingRef)		
-		print(missingCopy)
-		print(missingType)
-		print(missingDep)
-		print('repeats: ', repeat)
-		print('wrongSeqRow: ', wrongSeqRow, '\n')
+		# print('Missing: ')
+		# print(missingRef)		
+		# print(missingCopy)
+		# print(missingType)
+		# print(missingDep)
+		# print('repeats: ', repeat)
+		# print('wrongSeqRow: ', wrongSeqRow, '\n')
 
-		print("status, name, copy, type, dependon:")
-		for reference in excelReference:
-			print(reference['status'], reference['name'], reference['copy'], reference['type'], reference['dependon'])
+		# print("status, name, copy, type, dependon:")
+		# for reference in excelReference:
+		# 	print(reference['status'], reference['name'], reference['copy'], reference['type'], reference['dependon'])
 
 
 		errorMessage = None
 		if missingRef or missingCopy or missingType or missingDep or repeat or wrongSeqRow:
 			errorMessage = writeErrorMessage(missingRef, missingCopy, missingType, missingDep, repeat, wrongSeqRow)
-			print(errorMessage)
-			
+			# print(errorMessage)
+
 		return xmlFilePath, excelReference, errorMessage
 
 def writeErrorMessage(missingRefRow, missingCopyRow, missingTypeRow, missingDepRow, repeatRefRow, wrongSequenceRow):
@@ -272,14 +270,14 @@ def writeErrorMessage(missingRefRow, missingCopyRow, missingTypeRow, missingDepR
 
 	if repeatRefRow:
 		for ref in sorted(repeatRefRow.keys()):
-			message = message + "R" + ref + " is repeated at row: "
+			message = message + "R" + ref + " is repeated at Row: "
 			for i in range(0, len(repeatRefRow[ref]) -1):
 				message = message + repeatRefRow[ref][i] + ", "
 			message = message + repeatRefRow[ref][-1] + "\n"
 		message = message + "\n"
 
 	if wrongSequenceRow:
-		message = message + "Sequence incorrect at row: "
+		message = message + "Sequence Incorrect at Row: "
 		for i in range(0, len(wrongSequenceRow) - 1):
 			message = message + wrongSequenceRow[i] + ", "
 		message = message + wrongSequenceRow[-1] + "\n" 
@@ -287,6 +285,6 @@ def writeErrorMessage(missingRefRow, missingCopyRow, missingTypeRow, missingDepR
 	return message
 
 				
-test = excelSheet()
-f = r"C:\Users\eltoshon\Desktop\programTestiing\xmltest1_instruction.xlsx"
-test.readExcelSheet(f)
+# test = excelSheet()
+# f = r"C:\Users\eltoshon\Desktop\programTestiing\xmltest1_instruction.xlsx"
+# test.readExcelSheet(f)
