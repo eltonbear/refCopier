@@ -17,7 +17,8 @@ def readXML(xmlFilePath):
 		return None
 
 	refName = [] #str
-	refNameGap = [] #list of lists of int(single or pair)
+	refNameGap = [] #list missing ref number in str
+	typ = []
 	dependon = []
 	numOfwire = len(wireE)
 	numOfRef = len(referenceE)
@@ -29,6 +30,7 @@ def readXML(xmlFilePath):
 		if depS != None:
 			depS = re.findall('\d+', depS.text)[0]
 		refName.append(numberS)
+		typ.append(referenceE[i].find('Type').text)
 		dependon.append(depS)
 		if i > 0:
 			currNum = int(numberS)
@@ -39,7 +41,7 @@ def readXML(xmlFilePath):
 		else:
 			prevNum = int(numberS)
 		
-	return refName, refNameGap, dependon, wireE
+	return refName, refNameGap, typ, dependon, wireE
 
 def getRootAndTree(xmlFilePath, xmlFileName):
 	### check format

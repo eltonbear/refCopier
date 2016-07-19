@@ -20,7 +20,7 @@ class excelSheet():
 		self.appendTag = 'Append'
 		self.workSheetName = 'Reference_copying'
 
-	def startNewExcelSheet(self, xmlFilePath, xmlFolderPath, xmlFileName, refNumList, refGap, depList, wireList):
+	def startNewExcelSheet(self, xmlFilePath, xmlFolderPath, xmlFileName, refNumList, refGap, typeList, depList, wireList):
 		xlsxFileName = xmlFileName + '_instruction.xlsx'
 		xmlPath = xmlFilePath
 		xlsxFilePath = xmlFolderPath + '/' + xlsxFileName
@@ -64,21 +64,21 @@ class excelSheet():
 		for rowN in range(int(self.firstInputRow), int(lastAppendRow) + 1):
 			rowS = str(rowN)
 			if rowN < int(fstAppendRow):
-				if str(refNumber) in refGap:
+				if str(refNumber) in refGap: ### missing ref row
 					worksheet.write(self.statusC + rowS, self.mTag,  missingTagAndRefF)
 					worksheet.write(self.refC + rowS, refNumber,  missingTagAndRefF)
 					worksheet.write(self.copyC + rowS, None,  missingUnblockedF)
 					worksheet.write(self.typeC + rowS, None,  missingUnblockedF)
 					worksheet.write_formula(self.depC + rowS, '=' + self.copyC + rowS, missingDepBlockedF)
 					worksheet.data_validation(self.copyC + rowS, {'validate': 'list', 'source': refNumList,'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'}) 
-				else:
+				else:  ### existing ref row
 					worksheet.write(self.refC + rowS, refNumber, centerF)
 					worksheet.write(self.copyC + rowS, None, copyBlockedF)
-					worksheet.write(self.typeC + rowS, None,  unlocked)
+					worksheet.write(self.typeC + rowS, typeList[refListIndex],  unlocked)
 					worksheet.write(self.depC + rowS, depList[refListIndex],  centerF)
 					# print(refListIndex)
 					refListIndex += 1
-			else:
+			else: ### append section
 				worksheet.write(self.refC + rowS, refNumber, appendTagAndRefF)
 				worksheet.write(self.copyC + rowS, None, appendUnblockedF)
 				worksheet.write(self.typeC + rowS, None,  appendUnblockedF)
