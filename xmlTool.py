@@ -2,18 +2,15 @@ import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 import re
 from os.path import exists
+from util import splitFileFolderAndName
 
-def readXML(xmlFilePath, xmlFileName):
-	### check format
-	try:
-		tree = ET.parse(xmlFilePath)                                    
-	except ET.ParseError:                       
-		fileFormatIncorrectWarning(xmlFileName)
-		return None
-
-	root = tree.getroot() 
+def readXML(xmlFilePath):
+	
+	_, xmlFileName = splitFileFolderAndName(xmlFilePath) ######???????????????????
+	root, tree = getRootAndTree(xmlFilePath, xmlFileName)
 	referenceE = root.findall('ReferenceSystem')
 	wireE = root.findall('Wire')
+
 	### check format
 	if not referenceE or not wireE:
 		fileFormatIncorrectWarning()
@@ -42,7 +39,18 @@ def readXML(xmlFilePath, xmlFileName):
 		else:
 			prevNum = int(numberS)
 		
-	return refName, refNameGap, dependon, referenceE, wireE, tree
+	return refName, refNameGap, dependon, wireE
+
+def getRootAndTree(xmlFilePath, xmlFileName):
+	### check format
+	try:
+		tree = ET.parse(xmlFilePath)                                    
+	except ET.ParseError:                       
+		fileFormatIncorrectWarning(xmlFileName)
+		return None
+	root = tree.getroot() 
+
+	return root, tree
 
 def checkRepeats(refNameList):
 	''' Check if there is any repeating reference. Return a list of lists of a name of repeating ref(str) and count(int)'''
@@ -93,10 +101,13 @@ def fileFormatIncorrectWarning(fileName):
 	messagebox.showinfo("Warning", "File: " + fileName + " - format incorrect!") #### maybe make another interface
 
 
-def modifier(xmlFolderPath, xmlFileName, refList, nameList, typeList, referenceE, wireE, tree):
+def modifier(xmlFilePath, refList, nameList, typeList):
+	xmlFolderPath, xmlFileName = splitFileFolderAndName(xmlFilePath)
 	### make a ElementTree object and find its root (highest node)   
-	root = tree.getroot() 
+	root, tree = getRootAndTree(xmlFilePath, xmlFileName)
 	### make two lists of all reference elements(objects) and wire elements(objects)
+	referenceE = root.findall('ReferenceSystem')
+	wireE = root.findall('Wire') 
 	numOfRef = len(referenceE)
 	numOfWire = len(wireE)
 	for n in range(0, len(refList)):

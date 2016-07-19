@@ -1,7 +1,8 @@
 from tkinter import *
 from tkinter.filedialog import askopenfilename
 from tkinter import messagebox
-from os.path import isfile, split, splitext
+from os.path import isfile
+from util import splitFileFolderAndName
 
 class browse(Frame):
 	def __init__(self, parent, isXML):
@@ -63,10 +64,6 @@ class browse(Frame):
 			self.folderPath, self.fileName = splitFileFolderAndName(self.filePath)	
 			self.closeWindow()
 
-	# def getFolderAndFileName(self):
-	# 	self.folderPath, self.fileName = split(self.filePath)
-	# 	self.fileName = splitext(self.fileName)[0]
-
 	def incorrectFileNameWarning(self):
 		messagebox.showinfo("Warning", "File does not exist!")
 
@@ -77,6 +74,7 @@ class browse(Frame):
 		messagebox.showinfo("Warning", "File: " + self.fileName + " - format incorrect!")
 
 
-def splitFileFolderAndName(filePath):
-	folderPath, fileName = split(filePath)
-	return folderPath, splitext(fileName)[0]
+
+		#####3333 add back button
+
+

@@ -1,7 +1,7 @@
 from tkinter import Tk
 from firstInterface import first
 from browseInterface import browse, splitFileFolderAndName
-from excelSheetV2 import excelSheet
+from excelSheet import excelSheet
 from warningWindow import errorMessage
 import xmlTool
 from io import open
@@ -17,7 +17,7 @@ if firstW.start:
 	startN= browse(window2, True)
 	window2.mainloop()
 	if startN.isOk:
-		refNameList, refGap, depList, referenceList, wireList, tree = xmlTool.readXML(startN.filePath, startN.fileName)
+		refNameList, refGap, depList, wireList = xmlTool.readXML(startN.filePath)
 		refNameRepeats = xmlTool.checkRepeats(refNameList)
 		print(refNameList)
 		print(refGap)
@@ -33,7 +33,8 @@ if firstW.start:
 		else:
 			### write excel sheet
 			excelWrite = excelSheet()
-			excelWrite.startNewExcelSheet(startN.filePath, startN.folderPath, startN.fileName, refNameList, refGap, depList, wireList)
+			# excelWrite.startNewExcelSheet(startN.filePath, startN.folderPath, startN.fileName, refNameList, refGap, wireList)
+			excelWrite.startNewExcelSheet(startN.filePath, startN.folderPath, startN.fileName, refNameList, refGap, depList, wireList) ### for V2
 			
 elif firstW.importSheet:
 	### It's xlsx file
@@ -51,8 +52,6 @@ elif firstW.importSheet:
 			errorWindow.mainloop()
 		else:
 			### call xml modifier
-			xmlFolder, xmlFileName = splitFileFolderAndName(xmlPath)
-			refNameList, refGap, referenceList, wireList, tree = xmlTool.readXML(xmlPath, xmlFileName)           						##### merge xmlreader and modifer
-			newXmlFilePath = xmlTool.modifier(xmlFolder, xmlFileName, excelRef, excelNam, excelTyp, referenceList,  wireList, tree)
+			newXmlFilePath = xmlTool.modifier(xmlPath, excelRef, excelNam, excelTyp)
 			startfile(newXmlFilePath)
 
