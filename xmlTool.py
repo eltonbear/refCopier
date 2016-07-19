@@ -29,6 +29,8 @@ def readXML(xmlFilePath):
 		depS = referenceE[i].find('Dependon')
 		if depS != None:
 			depS = re.findall('\d+', depS.text)[0]
+		else: 
+			depS = 'none'
 		refName.append(numberS)
 		typ.append(referenceE[i].find('Type').text)
 		dependon.append(depS)

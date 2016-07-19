@@ -43,7 +43,7 @@ elif firstW.importSheet:
 	window2.mainloop()
 	if importS.isOk:
 		excelRead = excelSheet()
-		xmlPath, excelNam, excelRef, excelTyp, error = excelRead.readExcelSheet(importS.filePath)
+		xmlPath, refExcelDict, error = excelRead.readExcelSheet(importS.filePath)
 		if error:
 			#### call error messager
 			errorFilePath = importS.folderPath+ '/' +  importS.fileName + '_error.txt'

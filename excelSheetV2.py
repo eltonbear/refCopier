@@ -16,11 +16,15 @@ class excelSheet():
 		self.xmlFilePathCell ='G1'
 		self.wireTagCell = 'G3'
 		self.wireCountCell = 'G4'
-		self.mTag = 'Missing'
-		self.appendTag = 'Append'
+		self.lastAppendRowCell = 'F1'
+		self.mTag = 'missing'
+		self.eTag = 'existing'
+		self.appendTag = 'appending'
 		self.workSheetName = 'Reference_copying'
+		self.copyBlockedText = 'BLOCKED'
+		self.dependNoneText = "none"
 
-	def startNewExcelSheet(self, xmlFilePath, xmlFolderPath, xmlFileName, refNumList, refGap, typeList, depList, wireList):
+	def startNewExcelSheet(self, xmlFilePath, xmlFolderPath, xmlFileName, refNumList, refGap, typeList, depList, wireList): #######3 use util maybe!!!!!!
 		xlsxFileName = xmlFileName + '_instruction.xlsx'
 		xmlPath = xmlFilePath
 		xlsxFilePath = xmlFolderPath + '/' + xlsxFileName
@@ -31,20 +35,22 @@ class excelSheet():
 		unlocked = workbook.add_format({'locked': 0, 'valign': 'vcenter', 'align': 'center'})
 		centerF = workbook.add_format({'valign': 'vcenter', 'align': 'center'})
 		titleF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#b8cce0', 'font_color': '#1f497d', 'bold': True, 'bottom': 2, 'bottom_color': '#82a5d0'})
-		copyBlockedF = workbook.add_format({'bg_color': '#a6a6a6'})
+		copyBlockedF = workbook.add_format({'bg_color': '#a6a6a6', 'font_color': '#a6a6a6'})
 		missingTagAndRefF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#FFC7CE', 'font_color': '#9C0006', 'border': 1, 'border_color': '#b2b2b2'   })
 		missingUnblockedF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#FFC7CE', 'locked': 0, 'border': 1, 'border_color': '#b2b2b2'})
 		missingDepBlockedF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#FFC7CE', 'locked': 1, 'hidden': 1,'border': 1, 'border_color': '#b2b2b2'})
-		missingDepBlockedBlankF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#FFC7CE', 'font_color': '#FFC7CE', 'locked': 1, 'hidden': 1,'border': 1, 'border_color': '#b2b2b2'})
+		missingDepBlockedBlankF = workbook.add_format({'bg_color': '#FFC7CE', 'font_color': '#FFC7CE', 'locked': 1, 'hidden': 1,'border': 1, 'border_color': '#b2b2b2'})
+		existingWhiteBlockedF = workbook.add_format({'font_color': 'white', 'locked': 1})
 		appendTagAndRefF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'font_color': 'white', 'bg_color': '#92cddc', 'locked': 1, 'border': 1, 'border_color': '#b2b2b2'})
 		appendUnblockedF =  workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#92cddc', 'locked': 0,'border': 1, 'border_color': '#b2b2b2'})
 		appendDepBlockedF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#92cddc', 'locked': 1, 'hidden': 1, 'border': 1, 'border_color': '#b2b2b2'})
-		appendDepBlockedBlankF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#92cddc', 'font_color': '#92cddc', 'locked': 1, 'hidden': 1, 'border': 1, 'border_color': '#b2b2b2'})
+		appendDepBlockedBlankF = workbook.add_format({'bg_color': '#92cddc', 'font_color': '#92cddc', 'locked': 1, 'hidden': 1, 'border': 1, 'border_color': '#b2b2b2'})
 
 		### activate protection
 		worksheet.protect('elton')
 
 		### set column width and  protection
+		worksheet.set_column(self.statusC + ':' + self.statusC, 10)
 		worksheet.set_column(self.refC + ':' + self.refC, 20)
 		worksheet.set_column(self.typeC + ':' + self.typeC, 15)
 		worksheet.set_column(self.depC + ':' + self.depC, 17)
@@ -56,6 +62,9 @@ class excelSheet():
 		worksheet.write(self.copyC + self.titleRow, 'Copy (R)', titleF)
 		worksheet.write(self.typeC + self.titleRow, 'Reference Type', titleF)
 		worksheet.write(self.depC + self.titleRow, 'Dependent On (R)', titleF)
+		worksheet.write(self.wireTagCell, "Wire Count", centerF)
+		worksheet.write(self.wireCountCell, len(wireList), centerF)
+		worksheet.write(self.xmlFilePathCell, 'XML: ' + xmlPath)
 
 		### write rows
 		lastRefRow = int(self.titleRow) + int(refNumList[-1])
@@ -75,10 +84,12 @@ class excelSheet():
 					worksheet.conditional_format(self.depC + rowS, {'type': 'cell', 'criteria': 'equal to', 'value': 0, 'format': missingDepBlockedBlankF})
 					worksheet.data_validation(self.copyC + rowS, {'validate': 'list', 'source': refNumList,'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'}) 
 				else:  ### existing ref row
+					worksheet.write(self.statusC + rowS, self.eTag, existingWhiteBlockedF)
 					worksheet.write(self.refC + rowS, refNumber, centerF)
-					worksheet.write(self.copyC + rowS, None, copyBlockedF)
+					worksheet.write(self.copyC + rowS, self.copyBlockedText, copyBlockedF)
 					worksheet.write(self.typeC + rowS, typeList[refListIndex],  unlocked)
 					worksheet.write(self.depC + rowS, depList[refListIndex],  centerF)
+					worksheet.conditional_format(self.depC + rowS, {'type': 'text', 'criteria': 'containing', 'value': 'none','format': existingWhiteBlockedF})
 					# print(refListIndex)
 					refListIndex += 1
 			else: ### append section
@@ -90,6 +101,9 @@ class excelSheet():
 				worksheet.conditional_format(self.depC + rowS, {'type': 'cell', 'criteria': 'equal to', 'value': 0, 'format': appendDepBlockedBlankF})
 				worksheet.data_validation(self.copyC + rowS, {'validate': 'list', 'source': refNumList,'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'})
 			refNumber = refNumber + 1
+
+		worksheet.write(self.lastAppendRowCell, rowN,  existingWhiteBlockedF)
+
 
 		### add comment
 		copyTitleComment = 'Input a name of any existing refernces from the XML file (number only).\nAll gaps need to be filled out'
@@ -109,7 +123,7 @@ class excelSheet():
 		startfile(xlsxFilePath)
 
 	def readExcelSheet(self, xlsxFilePath):
-		workbook = op.load_workbook(filename = xlsxFilePath, read_only=True)
+		workbook = op.load_workbook(filename = xlsxFilePath, read_only = True, data_only=True)
 		try:
 			worksheet = workbook.get_sheet_by_name(self.workSheetName)
 		except keyError:
@@ -120,86 +134,159 @@ class excelSheet():
 			return None
 		
 		xmlFilePath = worksheet[self.xmlFilePathCell].value[5:]
+		lastRow = worksheet[self.lastAppendRowCell].value # str
 
-		
-		
-		excelRef = []
-		excelCopy = []
-		excelType = []
-		excelDep = []
-		missingCopy = [] ### missingCopy = []
+		excelReference = []
+		missingRef = []
+		missingCopy = []
 		missingType = []
+		missingDep = []
 		wrongSeqRow = []
 		checkRepeatRef = set()
-		temp = {}
+		allCopy = {}
 		repeat = {}
 		row  = self.firstInputRow
-		statusCo = worksheet.columns[0]
-		lastRow = len(statusCo)
-		IsAppend = statusCo[int(row)].value == self.appendTag
-		prevBothNotEmpty = True
-		while int(row) <= lastRow: 
-			name = worksheet[self.nameC + row].value
+		# statusCo = worksheet.columns[0]
+		# lastRow = len(statusCo)
+		# IsAppend = statusCo[int(row)].value == self.appendTag
+		prevAllExist = True
+		error = False
+		while int(row) <= int(lastRow): 
+			status = worksheet[self.statusC + row].value
 			ref = str(worksheet[self.refC + row].value)
+			copy = worksheet[self.copyC + row].value
 			typ = worksheet[self.typeC + row].value
-			### gap
-			if not IsAppend:
-				if ref and typ and ref != 'None' and typ != 'None':
-					excelName.append(name)
-					missingCopy.append(ref)
-					excelType.append(typ)
+			dep = str(worksheet[self.depC + row].value)
+
+			refExists = ref and ref != 'None'
+			copyExists = copy and copy !='None'
+			typeExists = typ and typ !='None'
+			depExists = dep and dep != 'None' and dep != '0' ### with formula 
+			depCellEmpty = dep == None or dep == 'None'      ### if gets modified by users and left empty
+			if dep == self.dependNoneText:
+				dep = None
+			if copy == self.copyBlockedText:
+				copy = None
+
+			if status != self.appendTag:
+				if refExists and copyExists and typeExists and depExists and not error:
+					reference = {"status": status, "name": ref, "copy": copy, "type": typ, "dependon": dep}
+					excelReference.append(reference)
 				else:
-					if not ref or ref == 'None':
+					if not refExists:
+						missingRef.append(row)
+					if not copyExists:
 						missingCopy.append(row)
-					if not typ or typ == 'None':
+					if not typeExists:
 						missingType.append(row)
-				if tagCo[int(row)].value == self.appendTag:
-					gap = False
+					if depCellEmpty:
+						missingDep.append(row)
+					error = True
 			else: ### append
-				if ref and typ and  ref != 'None' and typ != 'None' and prevBothNotEmpty:
-					excelName.append(name)
-					missingCopy.append(ref)
-					excelType.append(typ)
-				elif (not ref or ref == 'None') and typ and typ != 'None' and prevBothNotEmpty:
-					missingCopy.append(row)              
-				elif (not typ or typ != 'None') and ref and ref != 'None' and prevBothNotEmpty:
-					missingType.append(row)
-				elif prevBothNotEmpty:
-					prevBothNotEmpty = False
-				elif (ref and ref != 'None') or (typ and typ != 'None'):
+				if prevAllExist:					
+					if refExists and copyExists and typeExists and depExists and not error:
+						reference = {"status": status, "name": ref, "copy": copy, "type": typ, "dependon": dep}
+						excelReference.append(reference)
+					elif refExists and not copyExists and not typeExists and not depExists:
+						prevAllExist = False
+					else:
+						if not refExists:
+							missingRef.append(row)
+						if not copyExists:
+							missingCopy.append(row)
+						if not typeExists:
+							missingType.append(row)
+						if depCellEmpty:
+							missingDep.append(row)
+						error = True
+				elif copyExists or typeExists or depExists:
 					wrongSeqRow.append(row)
-					prevBothNotEmpty = True
-					if not (ref and ref != 'None'):
+					if not refExists:
+						missingRef.append(row)
+					if not copyExists:
 						missingCopy.append(row)
-					elif not (typ and typ != 'None'):
+					if not typeExists:
 						missingType.append(row)
+					if depCellEmpty:
+						missingDep.append(row) 
+					prevAllExist = True
+					error = True
 
 			### chcek repeats
-			if ref != 'None' and ref:
-				if ref in temp and not ref in repeat:
-					repeat[ref] = temp[ref]
-					repeat[ref].append(row)
-				elif ref in temp and ref in repeat:
-					repeat[ref].append(row)
+			if copy != 'None' and copy and type(copy) == int:
+				if copy in allCopy and not copy in repeat:
+					repeat[copy] = allCopy[copy]
+					repeat[copy].append(row)
+					error = True
+				elif copy in allCopy and copy in repeat:
+					repeat[copy].append(row)
 				else:
-					temp[ref] = [row]
+					allCopy[copy] = [row]
 
 			row = str(int(row) + 1)
+		print('Missing: ')
+		print(missingRef)		
+		print(missingCopy)
+		print(missingType)
+		print(missingDep)
+		print('repeats: ', repeat)
+		print('wrongSeqRow: ', wrongSeqRow, '\n')
 
-		# print(excelName)
-		# print(excelRef)
-		# print(excelType)		
-		# print(missingCopy)
-		# print(missingType)
-		# print(repeat)
-		# print(wrongSeqRow)
+		print("status, name, copy, type, dependon:")
+		for reference in excelReference:
+			print(reference['status'], reference['name'], reference['copy'], reference['type'], reference['dependon'])
+
+
 		errorMessage = None
-		if missingCopy or missingType or repeat or wrongSeqRow:
-			errorMessage = writeErrorMessage(missingCopy, missingType, repeat, wrongSeqRow)
+		if missingRef or missingCopy or missingType or missingDep or repeat or wrongSeqRow:
+			errorMessage = writeErrorMessage(missingRef, missingCopy, missingType, missingDep, repeat, wrongSeqRow)
 			print(errorMessage)
-		return xmlFilePath, excelName, excelRef, excelType, errorMessage
+			
+		return xmlFilePath, excelReference, errorMessage
+
+def writeErrorMessage(missingRefRow, missingCopyRow, missingTypeRow, missingDepRow, repeatRefRow, wrongSequenceRow):
+	message = ""
+	if missingRefRow:
+		message = message + "Missing Reference Number at Row: "
+		for i in range(0, len(missingRefRow) - 1):
+			message = message + missingRefRow[i] + ", "
+		message = message + missingRefRow[-1] + "\n\n"
+
+	if missingCopyRow:
+		message = message + "Missing Copying Number at Row: "
+		for i in range(0, len(missingCopyRow) - 1):
+			message = message + missingCopyRow[i] + ", "
+		message = message + missingCopyRow[-1] + "\n\n"
+
+	if missingTypeRow:
+		message = message + "Missing Reference Type at Row: "
+		for i in range(0, len(missingTypeRow) - 1):
+			message = message + missingTypeRow[i] + ", "
+		message = message + missingTypeRow[-1] + "\n\n"
+
+	if missingDepRow:
+		message = message + "Missing Dependent Number at Row: "
+		for i in range(0, len(missingDepRow) - 1):
+			message = message + missingDepRow[i] + ", "
+		message = message + missingDepRow[-1] + "\n\n"
+
+	if repeatRefRow:
+		for ref in sorted(repeatRefRow.keys()):
+			message = message + "R" + ref + " is repeated at row: "
+			for i in range(0, len(repeatRefRow[ref]) -1):
+				message = message + repeatRefRow[ref][i] + ", "
+			message = message + repeatRefRow[ref][-1] + "\n"
+		message = message + "\n"
+
+	if wrongSequenceRow:
+		message = message + "Sequence incorrect at row: "
+		for i in range(0, len(wrongSequenceRow) - 1):
+			message = message + wrongSequenceRow[i] + ", "
+		message = message + wrongSequenceRow[-1] + "\n" 
+
+	return message
 
 				
-# test = excelSheet()
-# f = r"C:\Users\eltoshon\Desktop\programTestiing\xmltest1.xml"
-# test.startNewExcelSheet(f, r"C:\Users\eltoshon\Desktop\programTestiing", 'xmltest1',['1', '2', '4', '5', '9'], ['3', '6', '7', '8'], ['100','100','100','100','100'], None)
+test = excelSheet()
+f = r"C:\Users\eltoshon\Desktop\programTestiing\xmltest1_instruction.xlsx"
+test.readExcelSheet(f)
