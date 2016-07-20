@@ -1,13 +1,11 @@
 from tkinter import Tk
 from firstInterface import first
-from browseInterface import browse, splitFileFolderAndName
+from browseInterface import browse
 from excelSheetV2 import excelSheet
 from warningWindow import errorMessage
-import xmlTool
-from io import open
 from os import startfile
 from util import splitFileFolderAndName
-
+import xmlTool
 
 window1 = Tk()
 firstW = first(window1)
