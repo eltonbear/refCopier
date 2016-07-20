@@ -20,23 +20,26 @@ if firstW.start:
 	window2.mainloop()
 	if startN.isOk:
 		refNameList, refGap, typeList, depList, wireList = xmlTool.readXML(startN.filePath)
-		refNameRepeats = xmlTool.checkRepeats(refNameList)
-		print(refNameList)
-		print(refGap)
-		print(depList)
-		print(refNameRepeats)
-		if refNameRepeats:
-			### creat info files when there is a repeat            
-			info = xmlTool.XMLInfo(startN.filePath, refNameRepeats, refNameList, refGap, wireList)
-			folderPath, fileName = splitFileFolderAndName(startN.filePath)
-			errorFilePath = folderPath + '/' +  fileName + '_info.txt'
-			infoWindow = Tk()
-			warning = errorMessage(infoWindow, info, errorFilePath, True)
-			infoWindow.mainloop()
+		folderPath, fileName = splitFileFolderAndName(startN.filePath)
+		if not refNameList or not wireList:
+			startN.fileFormatIncorrectWarning(fileName)
 		else:
-			### write excel sheet
-			excelWrite = excelSheet()
-			excelWrite.startNewExcelSheet(startN.filePath, refNameList, refGap, typeList, depList, wireList)
+			refNameRepeats = xmlTool.checkRepeats(refNameList)
+			print(refNameList)
+			print(refGap)
+			print(depList)
+			print(refNameRepeats)
+			if refNameRepeats:
+				### creat info files when there is a repeat            
+				info = xmlTool.XMLInfo(startN.filePath, refNameRepeats, refNameList, refGap, wireList)
+				errorFilePath = folderPath + '/' +  fileName + '_info.txt'
+				infoWindow = Tk()
+				warning = errorMessage(infoWindow, info, errorFilePath, True)
+				infoWindow.mainloop()
+			else:
+				### write excel sheet
+				excelWrite = excelSheet()
+				excelWrite.startNewExcelSheet(startN.filePath, refNameList, refGap, typeList, depList, wireList)
 			
 elif firstW.importSheet:
 	### It's xlsx file
@@ -46,15 +49,18 @@ elif firstW.importSheet:
 	if importS.isOk:
 		excelRead = excelSheet()
 		xmlPath, refExcelDict, error = excelRead.readExcelSheet(importS.filePath)
+		folderPath, fileName = splitFileFolderAndName(importS.filePath)
 		if error:
 			#### call error messager
-			folderPath, fileName = splitFileFolderAndName(importS.filePath)
 			errorFilePath = folderPath + '/' + fileName + '_error.txt'
 			errorWindow = Tk()
 			warning = errorMessage(errorWindow, error, errorFilePath, True)
 			errorWindow.mainloop()
 		else:
 			### call xml modifier
-			newXmlFilePath = xmlTool.modifier(xmlPath, excelRef, excelNam, excelTyp)
-			startfile(newXmlFilePath)
+			newXmlFilePath = xmlTool.modifier(xmlPath, refExcelDict)
+			if not newXmlFilePath:
+				importS.fileFormatIncorrectWarning(fileName)
+			else:
+				startfile(newXmlFilePath)
 

@@ -5,16 +5,14 @@ from os.path import exists
 from util import splitFileFolderAndName
 
 def readXML(xmlFilePath):
-	
-	_, xmlFileName = splitFileFolderAndName(xmlFilePath) ######???????????????????
-	root, tree = getRootAndTree(xmlFilePath, xmlFileName)
+	try:
+		tree = ET.parse(xmlFilePath)                                    
+	except ET.ParseError: 
+		return None, None, None, None, None
+
+	root = tree.getroot() 
 	referenceE = root.findall('ReferenceSystem')
 	wireE = root.findall('Wire')
-
-	### check format
-	if not referenceE or not wireE:
-		fileFormatIncorrectWarning(xmlFileName)
-		return None
 
 	refName = [] #str
 	refNameGap = [] #list missing ref number in str
@@ -45,17 +43,6 @@ def readXML(xmlFilePath):
 		
 	return refName, refNameGap, typ, dependon, wireE
 
-def getRootAndTree(xmlFilePath, xmlFileName):
-	### check format
-	try:
-		tree = ET.parse(xmlFilePath)                                    
-	except ET.ParseError:                       
-		fileFormatIncorrectWarning(xmlFileName)
-		return None
-	root = tree.getroot() 
-
-	return root, tree
-
 def checkRepeats(refNameList):
 	''' Check if there is any repeating reference. Return a list of lists of a name of repeating ref(str) and count(int)'''
 	repeat = []
@@ -65,7 +52,6 @@ def checkRepeats(refNameList):
 		if count > 1:
 			repeat.append([s, count])
 	return repeat
-
 
 def XMLInfo(xmlFilePath, repRef, refName, refGap, wireList):
 	numR = len(refName)
@@ -105,28 +91,79 @@ def fileFormatIncorrectWarning(fileName):
 	messagebox.showinfo("Warning", "File: " + fileName + " - format incorrect!") #### maybe make another interface
 
 
-def modifier(xmlFilePath, refList, nameList, typeList):
+# def modifier(xmlFilePath, refList, nameList, typeList):   VERSION1
+# 	xmlFolderPath, xmlFileName = splitFileFolderAndName(xmlFilePath)
+# 	### make a ElementTree object and find its root (highest node)   
+# 	try:
+# 		tree = ET.parse(xmlFilePath)                                    
+# 	except ET.ParseError: 
+# 		return None
+
+# 	root = tree.getroot() 
+# 	### make two lists of all reference elements(objects) and wire elements(objects)
+# 	referenceE = root.findall('ReferenceSystem')
+# 	wireE = root.findall('Wire') 
+# 	numOfRef = len(referenceE)
+# 	numOfWire = len(wireE)
+# 	for n in range(0, len(refList)):
+# 		### Create reference(copy) with according names, types, and dependency
+# 		### And insert them after the last referenceSystem if ref entry is not empty
+# 		if refList[n]:
+# 			for r in referenceE:
+# 				if 'R' + refList[n] == r.find('Name').text:
+# 					print("im here")
+# 					copy = writeARefCopy(r, refList[n], nameList[n], typeList[n])
+# 					root.insert(int(nameList[n])-1, copy) 							################## error caused by insert with random index??
+# 					break
+
+# 		### change wire's des		
+# 		modifyWireDesRef(refList[n], nameList[n], wireE)
+# 	### write to a new xml file
+# 	newXmlFilePath = xmlFolderPath + "/" + xmlFileName + "_new.xml"
+# 	tree.write(newXmlFilePath)
+# 	return newXmlFilePath
+
+def modifier(xmlFilePath, referenceDictDFromExc):
 	xmlFolderPath, xmlFileName = splitFileFolderAndName(xmlFilePath)
 	### make a ElementTree object and find its root (highest node)   
-	root, tree = getRootAndTree(xmlFilePath, xmlFileName)
+	try:
+		tree = ET.parse(xmlFilePath)                                    
+	except ET.ParseError: 
+		return None
+
+	root = tree.getroot() 
 	### make two lists of all reference elements(objects) and wire elements(objects)
 	referenceE = root.findall('ReferenceSystem')
 	wireE = root.findall('Wire') 
 	numOfRef = len(referenceE)
 	numOfWire = len(wireE)
-	for n in range(0, len(refList)):
-		### Create reference(copy) with according names, types, and dependency
-		### And insert them after the last referenceSystem if ref entry is not empty
-		if refList[n]:
-			for r in referenceE:
-				if 'R' + refList[n] == r.find('Name').text:
-					print("im here")
-					copy = writeARefCopy(r, refList[n], nameList[n], typeList[n])
-					root.insert(int(nameList[n])-1, copy) 							################## error caused by insert with random index??
-					break
+	referenceEDict = {}
+	for r in referenceE: ### Modify existing ref's type and dep if necessary
+		ref = r.find('Name').text
+		typ, dep = referenceDictDFromExc['og'][ref[1:]]
+		if r.find('Type').text != typ:
+			r.find('Type').text = typ
+		if dep:
+			if r.find('Dependon') == None:
+				newDepEle = Element('Dependon')
+				newDepEle.text = 'R' + dep
+				r.insert(2, newDepEle)
+				indent(newDepEle, 2)
+			elif r.find('Dependon').text != 'R'+ dep:
+				r.find('Dependon').text = 'R' + dep
+		else:
+			if r.find('Dependon') != None:
+				r.remove(r.find('Dependon'))
+		### make reference element dictionary
+		referenceEDict[ref] = r
 
-		### change wire's des		
-		modifyWireDesRef(refList[n], nameList[n], wireE)
+	addRefDict = referenceDictDFromExc['add']
+	# sorted(map(int, addRefDict.keys()))
+	for nName in referenceDictDFromExc['newRefName']:
+		copy = writeARefCopy(referenceEDict['R'+addRefDict[nName][0]], addRefDict[nName][0], nName, addRefDict[nName][1])
+		root.insert(int(nName)-1, copy)
+		### Change wire des
+		modifyWireDesRef(addRefDict[nName][0], nName, wireE)
 	### write to a new xml file
 	newXmlFilePath = xmlFolderPath + "/" + xmlFileName + "_new.xml"
 	tree.write(newXmlFilePath)
@@ -149,10 +186,10 @@ def writeARefCopy(refToCopy, oldName, newName, typ):
 	### return the reference(address) of the ref element
 	return newRefEle
 
-def modifyWireDesRef(oldDes, newDes, wireElement):
+def modifyWireDesRef(oldDes, newDes, wireElements):
 	# print("old: " + oldDes)
 	# print("new: " + newDes +'\n')
-	for wire in wireElement:
+	for wire in wireElements:
 		secBondDes = wire.findall('Bond')[1].find('Refsys')
 		# print("wire's des: " + secBondDes.text)
 		if secBondDes.text == 'R' + oldDes:

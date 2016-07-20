@@ -1,9 +1,10 @@
 from io import open
 from os import startfile
 from os.path import exists
+from util import splitFileFolderAndName
 
-def writeInfoText(xmlFilePath, xmlFolderPath, xmlFileName, repRef, refName, refGap, wireList):
-
+def writeInfoText(xmlFilePath, repRef, refName, refGap, wireList):
+	xmlFolderPath, xmlFileName = splitFileFolderAndName(xmlFilePath)
 	infoName = xmlFileName + "_info.txt" 
 	infoFilePath = xmlFolderPath + "/" + infoName
 	numR = len(refName)

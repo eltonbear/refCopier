@@ -91,7 +91,6 @@ class excelSheet():
 					worksheet.write(self.typeC + rowS, typeList[refListIndex],  unlocked)
 					worksheet.write(self.depC + rowS, depList[refListIndex],  centerF)
 					worksheet.conditional_format(self.depC + rowS, {'type': 'text', 'criteria': 'containing', 'value': 'none','format': existingWhiteBlockedF})
-					# print(refListIndex)
 					refListIndex += 1
 			else: ### append section
 				worksheet.write(self.statusC + rowS, self.appendTag, appendTagAndRefF)
@@ -137,12 +136,13 @@ class excelSheet():
 		xmlFilePath = worksheet[self.xmlFilePathCell].value[5:]
 		lastRow = worksheet[self.lastAppendRowCell].value # str
 
-		excelReference = []
+		excelReference = {'og': {}, 'add': {}, 'newRefName': []}
 		missingRef = []
 		missingCopy = []
 		missingType = []
 		missingDep = []
 		wrongSeqRow = []
+		newRefName = []
 		checkRepeatRef = set()
 		allCopy = {}
 		repeat = {}
@@ -166,10 +166,15 @@ class excelSheet():
 			if copy == self.copyBlockedText:
 				copy = None
 
-			if status != self.appendTag:
+			if status != self.appendTag: ##################################################################### probably dont need status... and is dep needed for existing refs?
 				if refExists and copyExists and typeExists and depExists and not error:
-					reference = {"status": status, "name": ref, "copy": copy, "type": typ, "dependon": dep}
-					excelReference.append(reference)
+					if status == self.mTag:
+						excelReference['add'][ref] = [copy, typ]
+						excelReference['newRefName'].append(ref)
+					else:
+						excelReference['og'][ref] = [typ, dep]
+					# reference = {"status": status, "name": ref, "copy": copy, "type": typ, "dependon": dep}
+					# excelReference.append(reference)
 				else:
 					if not refExists:
 						missingRef.append(row)
@@ -183,11 +188,12 @@ class excelSheet():
 			else: ### append
 				if prevAllExist:					
 					if refExists and copyExists and typeExists and depExists and not error:
-						reference = {"status": status, "name": ref, "copy": copy, "type": typ, "dependon": dep}
-						excelReference.append(reference)
+						excelReference['add'][ref] = [copy, typ]
+						excelReference['newRefName'].append(ref)
+						# reference = {"status": status, "name": ref, "copy": copy, "type": typ, "dependon": dep}
+						# excelReference.append(reference)
 					elif refExists and not copyExists and not typeExists and not depExists:
 						prevAllExist = False
-						print(row)
 					else:
 						if not refExists:
 							missingRef.append(row)
@@ -229,10 +235,7 @@ class excelSheet():
 		# print(missingDep)
 		# print('repeats: ', repeat)
 		# print('wrongSeqRow: ', wrongSeqRow, '\n')
-
-		# print("status, name, copy, type, dependon:")
-		# for reference in excelReference:
-		# 	print(reference['status'], reference['name'], reference['copy'], reference['type'], reference['dependon'])
+		print(excelReference)
 
 
 		errorMessage = None
