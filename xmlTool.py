@@ -5,17 +5,21 @@ from os.path import exists
 from util import splitFileFolderAndName
 
 def readXML(xmlFilePath):
+	parseFailure = False
 	try:
 		tree = ET.parse(xmlFilePath)                                    
 	except ET.ParseError: 
-		return None, None, None, None, None
+		parseFailure  = True
 
 	root = tree.getroot() 
 	referenceE = root.findall('ReferenceSystem')
 	wireE = root.findall('Wire')
 
+	if parseFailure or not referenceE or not wireE:
+		return None, None, None, None, None
+
 	refName = [] #str
-	refNameGap = [] #list missing ref number in str
+	refNameGap = [] #list of missing ref numbers in str
 	typ = []
 	dependon = []
 	numOfwire = len(wireE)
@@ -86,42 +90,6 @@ def XMLInfo(xmlFilePath, repRef, refName, refGap, wireList):
 
 	return info
 		
-def fileFormatIncorrectWarning(fileName):
-	messagebox.showinfo("Warning", "File: " + fileName + " - format incorrect!") #### maybe make another interface
-
-
-# def modifier(xmlFilePath, refList, nameList, typeList):   VERSION1
-# 	xmlFolderPath, xmlFileName = splitFileFolderAndName(xmlFilePath)
-# 	### make a ElementTree object and find its root (highest node)   
-# 	try:
-# 		tree = ET.parse(xmlFilePath)                                    
-# 	except ET.ParseError: 
-# 		return None
-
-# 	root = tree.getroot() 
-# 	### make two lists of all reference elements(objects) and wire elements(objects)
-# 	referenceE = root.findall('ReferenceSystem')
-# 	wireE = root.findall('Wire') 
-# 	numOfRef = len(referenceE)
-# 	numOfWire = len(wireE)
-# 	for n in range(0, len(refList)):
-# 		### Create reference(copy) with according names, types, and dependency
-# 		### And insert them after the last referenceSystem if ref entry is not empty
-# 		if refList[n]:
-# 			for r in referenceE:
-# 				if 'R' + refList[n] == r.find('Name').text:
-# 					print("im here")
-# 					copy = writeARefCopy(r, refList[n], nameList[n], typeList[n])
-# 					root.insert(int(nameList[n])-1, copy) 							################## error caused by insert with random index??
-# 					break
-
-# 		### change wire's des		
-# 		modifyWireDesRef(refList[n], nameList[n], wireE)
-# 	### write to a new xml file
-# 	newXmlFilePath = xmlFolderPath + "/" + xmlFileName + "_new.xml"
-# 	tree.write(newXmlFilePath)
-# 	return newXmlFilePath
-
 def modifier(xmlFilePath, referenceDictDFromExc):
 	xmlFolderPath, xmlFileName = splitFileFolderAndName(xmlFilePath)
 	### make a ElementTree object and find its root (highest node)   
