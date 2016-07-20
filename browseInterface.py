@@ -11,6 +11,7 @@ class browse(Frame):
 		self.filePath = ""
 		self.filePathEntry = None
 		self.isOk = False
+		self.clickedBack = False
 		self.isXmlNotXlsx = isXML
 		self.initGUI()
 
@@ -34,9 +35,11 @@ class browse(Frame):
 		bBrowse = Button(self.entryFrame, text = browseText, width = 12, command = self.getFilePath)	
 		bBrowse.grid(row = 0, column = 1, padx=3, pady=3)
 		bCancel = Button(self, text = "Cancel", width = 10 ,command = self.closeWindow)
-		bCancel.pack(side = RIGHT,padx=5, pady=2)
+		bCancel.pack(side = RIGHT,padx=4, pady=2)
+		bBack = Button(self, text = "Back", width = 7, command = self.back)
+		bBack.pack(side = RIGHT,padx=4, pady=2)
 		bOk = Button(self, text = "Ok", width = 5, command = self.OK)
-		bOk.pack(side = RIGHT, padx=5, pady=2)
+		bOk.pack(side = RIGHT, padx=4, pady=2)
 
 	def getFilePath(self):
 		if self.isXmlNotXlsx:
@@ -60,6 +63,10 @@ class browse(Frame):
 		else:
 			self.isOk = True
 			self.closeWindow()
+
+	def back(self):
+		self.clickedBack = True
+		self.closeWindow()
 
 	def incorrectFileNameWarning(self):
 		messagebox.showinfo("Warning", "File does not exist!")

@@ -11,9 +11,10 @@ def readXML(xmlFilePath):
 	except ET.ParseError: 
 		parseFailure  = True
 
-	root = tree.getroot() 
-	referenceE = root.findall('ReferenceSystem')
-	wireE = root.findall('Wire')
+	if not parseFailure:
+		root = tree.getroot() 
+		referenceE = root.findall('ReferenceSystem')
+		wireE = root.findall('Wire')
 
 	if parseFailure or not referenceE or not wireE:
 		return None, None, None, None, None
@@ -31,7 +32,6 @@ def readXML(xmlFilePath):
 		depS = referenceE[i].find('Dependon')
 		if depS != None:
 			depS = re.findall('\d+', depS.text)[0]
-
 		refName.append(numberS)
 		typ.append(referenceE[i].find('Type').text)
 		dependon.append(depS)

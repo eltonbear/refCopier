@@ -123,16 +123,18 @@ class excelSheet():
 		startfile(xlsxFilePath)
 
 	def readExcelSheet(self, xlsxFilePath):
-		workbook = op.load_workbook(filename = xlsxFilePath, read_only = True, data_only=True)
 		try:
+			workbook = op.load_workbook(filename = xlsxFilePath, read_only = True, data_only=True)
 			worksheet = workbook.get_sheet_by_name(self.workSheetName)
-		except keyError:
-			message = "Cannot find excel sheet!"
+		except op.utils.exceptions.InvalidFileException:
+			return 0, 0, 0
+		except KeyError:
+			message = "Cannot find excel sheet - " + self.workSheetName + "!"
 			cantFindSheetWindow = Tk()
-			warning = errorMessage(cantFindSheetWindow, message, None, False)
+			stiff= errorMessage(cantFindSheetWindow, message, None, False)
 			cantFindSheetWindow.mainloop()
-			return None
-		
+			return None, None, None
+			
 		xmlFilePath = worksheet[self.xmlFilePathCell].value[5:]
 		lastRow = worksheet[self.lastAppendRowCell].value # str
 
@@ -235,11 +237,11 @@ class excelSheet():
 
 			row = str(int(row) + 1)
 		# print(excelReference)
-		errorMessage = None
+		errorText = None
 		if missingRef or missingCopy or missingType or missingDep or repeat or wrongSeqRow:
-			errorMessage = writeErrorMessage(missingRef, missingCopy, missingType, missingDep, repeat, wrongSeqRow)
+			errorText = writeErrorMessage(missingRef, missingCopy, missingType, missingDep, repeat, wrongSeqRow)
 
-		return xmlFilePath, excelReference, errorMessage
+		return xmlFilePath, excelReference, errorText
 
 def writeErrorMessage(missingRefRow, missingCopyRow, missingTypeRow, missingDepRow, repeatRefRow, wrongSequenceRow):
 	message = ""
