@@ -78,7 +78,3 @@ class browse(Frame):
 		messagebox.showinfo("Warning", "File: " + fileName + " - format incorrect!")
 
 
-
-		#####3333 add back button
-
-

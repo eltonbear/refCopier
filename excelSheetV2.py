@@ -193,12 +193,9 @@ class excelSheet():
 					if refExists and copyExists and typeExists and depExists and not error:
 						excelReference['add'][ref] = [copy, typ]
 						excelReference['newRefName'].append(ref)
-						print(1, row)
 					elif refExists and not copyExists and not typeExists and not depExists:
 						prevAllExist = False
-						print(2, row)
 					else:
-						print(3, row)
 						print(typ, row)
 						if not refExists:
 							missingRef.append(row)
@@ -210,7 +207,6 @@ class excelSheet():
 							missingDep.append(row)
 						error = True
 				elif copyExists or typeExists or depExists:
-					print(4, row)
 					wrongSeqRow.append(row)
 					if not refExists:
 						missingRef.append(row)

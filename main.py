@@ -25,10 +25,6 @@ def main():
 				startN.fileFormatIncorrectWarning(fileName)
 			else:
 				refNameRepeats = xmlTool.checkRepeats(refNameList)
-				print(refNameList)
-				print(refGap)
-				print(depList)
-				print(refNameRepeats)
 				if refNameRepeats:
 					### creat info files when there is a repeat            
 					info = xmlTool.XMLInfo(startN.filePath, refNameRepeats, refNameList, refGap, wireList)
@@ -40,7 +36,6 @@ def main():
 					### write excel sheet
 					excelWrite = excelSheet()
 					excelWrite.startNewExcelSheet(startN.filePath, refNameList, refGap, typeList, depList, wireList)
-				
 	elif firstW.importSheet:
 		### It's xlsx file
 		window2 = Tk()
