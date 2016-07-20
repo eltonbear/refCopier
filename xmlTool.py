@@ -157,8 +157,7 @@ def modifier(xmlFilePath, referenceDictDFromExc):
 		referenceEDict[ref] = r
 
 	addRefDict = referenceDictDFromExc['add']
-	# sorted(map(int, addRefDict.keys()))
-	for nName in referenceDictDFromExc['newRefName']:
+	for nName in referenceDictDFromExc['newRefName']:	# sorted(map(int, addRefDict.keys()))
 		copy = writeARefCopy(referenceEDict['R'+addRefDict[nName][0]], addRefDict[nName][0], nName, addRefDict[nName][1])
 		root.insert(int(nName)-1, copy)
 		### Change wire des
@@ -186,19 +185,12 @@ def writeARefCopy(refToCopy, oldName, newName, typ):
 	return newRefEle
 
 def modifyWireDesRef(oldDes, newDes, wireElements):
-	# print("old: " + oldDes)
-	# print("new: " + newDes +'\n')
 	for wire in wireElements:
 		secBondDes = wire.findall('Bond')[1].find('Refsys')
-		# print("wire's des: " + secBondDes.text)
 		if secBondDes.text == 'R' + oldDes:
 			secBondDes.text = 'R' + newDes
-			# print("changed to: " + secBondDes.text)
-		# else:
-			# print("no changes")
-		# print("\n")
 
-### in-place prettyprint formatter found online --> http://effbot.org/zone/element-lib.htm#prettyprint 
+### in-place prettyprint formatter found online --> http://effbot.org/zone/element-lib.htm#prettyprint
 def indent(elem, level=0):
     i = "\n" + level*"  "
     if len(elem):
@@ -213,10 +205,6 @@ def indent(elem, level=0):
     else:
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
-
-
-
-
 
 
 

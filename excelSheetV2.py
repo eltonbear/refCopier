@@ -24,7 +24,7 @@ class excelSheet():
 		self.workSheetName = 'Reference_copying'
 		self.copyBlockedText = 'BLOCKED'
 
-	def startNewExcelSheet(self, xmlFilePath, refNumList, refGap, typeList, depList, wireList): #######3 use util maybe!!!!!!
+	def startNewExcelSheet(self, xmlFilePath, refNumList, refGap, typeList, depList, wireList):
 		xmlFolderPath, xmlFileName = splitFileFolderAndName(xmlFilePath)
 		xlsxFileName = xmlFileName + '_instruction.xlsx'
 		xlsxFilePath = xmlFolderPath + '/' + xlsxFileName
@@ -166,19 +166,16 @@ class excelSheet():
 			if status == self.eTag: 
 				if refExists and copyExists and typeExists and not error:
 					excelReference['og'][ref] = [typ, dep]
-					print(1, row)
 				else:
 					if not refExists:
 						missingRef.append(row)
 					if not typeExists:
 						missingType.append(row)
 					error = True
-					print(2, row)
 			elif status == self.mTag:
 				if refExists and copyExists and typeExists and depExists and not error:
 					excelReference['add'][ref] = [copy, typ]
 					excelReference['newRefName'].append(ref)
-					print(3, row)
 				else:
 					if not refExists:
 						missingRef.append(row)
@@ -189,15 +186,18 @@ class excelSheet():
 					if depCellEmpty:
 						missingDep.append(row)
 					error = True
-					print(4, row)
 			else: ### append
 				if prevAllExist:					
 					if refExists and copyExists and typeExists and depExists and not error:
 						excelReference['add'][ref] = [copy, typ]
 						excelReference['newRefName'].append(ref)
+						print(1, row)
 					elif refExists and not copyExists and not typeExists and not depExists:
 						prevAllExist = False
+						print(2, row)
 					else:
+						print(3, row)
+						print(typ, row)
 						if not refExists:
 							missingRef.append(row)
 						if not copyExists:
@@ -208,6 +208,7 @@ class excelSheet():
 							missingDep.append(row)
 						error = True
 				elif copyExists or typeExists or depExists:
+					print(4, row)
 					wrongSeqRow.append(row)
 					if not refExists:
 						missingRef.append(row)
@@ -233,20 +234,10 @@ class excelSheet():
 					allCopy[copy] = [row]
 
 			row = str(int(row) + 1)
-		# print('Missing: ')
-		# print(missingRef)		
-		# print(missingCopy)
-		# print(missingType)
-		# print(missingDep)
-		# print('repeats: ', repeat)
-		# print('wrongSeqRow: ', wrongSeqRow, '\n')
-		print(excelReference)
-
-
+		# print(excelReference)
 		errorMessage = None
 		if missingRef or missingCopy or missingType or missingDep or repeat or wrongSeqRow:
 			errorMessage = writeErrorMessage(missingRef, missingCopy, missingType, missingDep, repeat, wrongSeqRow)
-			# print(errorMessage)
 
 		return xmlFilePath, excelReference, errorMessage
 
