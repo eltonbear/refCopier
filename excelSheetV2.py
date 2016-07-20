@@ -20,10 +20,9 @@ class excelSheet():
 		self.lastAppendRowCell = 'F1'
 		self.mTag = 'missing'
 		self.eTag = 'existing'
-		self.appendTag = 'appending'
+		self.aTag = 'appending'
 		self.workSheetName = 'Reference_copying'
 		self.copyBlockedText = 'BLOCKED'
-		self.dependNoneText = "none"
 
 	def startNewExcelSheet(self, xmlFilePath, refNumList, refGap, typeList, depList, wireList): #######3 use util maybe!!!!!!
 		xmlFolderPath, xmlFileName = splitFileFolderAndName(xmlFilePath)
@@ -91,9 +90,10 @@ class excelSheet():
 					worksheet.write(self.typeC + rowS, typeList[refListIndex],  unlocked)
 					worksheet.write(self.depC + rowS, depList[refListIndex],  centerF)
 					worksheet.conditional_format(self.depC + rowS, {'type': 'text', 'criteria': 'containing', 'value': 'none','format': existingWhiteBlockedF})
+					worksheet.data_validation(self.depC + rowS, {'validate': 'list', 'source': refNumList,'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'})
 					refListIndex += 1
 			else: ### append section
-				worksheet.write(self.statusC + rowS, self.appendTag, appendTagAndRefF)
+				worksheet.write(self.statusC + rowS, self.aTag, appendTagAndRefF)
 				worksheet.write(self.refC + rowS, refNumber, appendTagAndRefF)
 				worksheet.write(self.copyC + rowS, None, appendUnblockedF)
 				worksheet.write(self.typeC + rowS, None,  appendUnblockedF)
@@ -111,7 +111,7 @@ class excelSheet():
 		worksheet.write_comment(self.statusC + fstAppendRow, 'Optional Section', {'author': 'Elton', 'width': 100, 'height': 15})
 		if refGap:
 			worksheet.write_comment(self.statusC + str(int(refGap[0]) + int(self.titleRow)), 'Reference gaps in xml file' , {'author': 'Elton', 'width': 140, 'height': 15})
-		
+
 		try:
 			workbook.close()
 		except PermissionError:
@@ -161,20 +161,24 @@ class excelSheet():
 			typeExists = typ and typ !='None'
 			depExists = dep and dep != 'None' and dep != '0' ### with formula 
 			depCellEmpty = dep == None or dep == 'None'      ### if gets modified by users and left empty
-			if dep == self.dependNoneText:
+			if dep == 'None':
 				dep = None
-			if copy == self.copyBlockedText:
-				copy = None
-
-			if status != self.appendTag: ##################################################################### probably dont need status... and is dep needed for existing refs?
+			if status == self.eTag: 
+				if refExists and copyExists and typeExists and not error:
+					excelReference['og'][ref] = [typ, dep]
+					print(1, row)
+				else:
+					if not refExists:
+						missingRef.append(row)
+					if not typeExists:
+						missingType.append(row)
+					error = True
+					print(2, row)
+			elif status == self.mTag:
 				if refExists and copyExists and typeExists and depExists and not error:
-					if status == self.mTag:
-						excelReference['add'][ref] = [copy, typ]
-						excelReference['newRefName'].append(ref)
-					else:
-						excelReference['og'][ref] = [typ, dep]
-					# reference = {"status": status, "name": ref, "copy": copy, "type": typ, "dependon": dep}
-					# excelReference.append(reference)
+					excelReference['add'][ref] = [copy, typ]
+					excelReference['newRefName'].append(ref)
+					print(3, row)
 				else:
 					if not refExists:
 						missingRef.append(row)
@@ -185,13 +189,12 @@ class excelSheet():
 					if depCellEmpty:
 						missingDep.append(row)
 					error = True
+					print(4, row)
 			else: ### append
 				if prevAllExist:					
 					if refExists and copyExists and typeExists and depExists and not error:
 						excelReference['add'][ref] = [copy, typ]
 						excelReference['newRefName'].append(ref)
-						# reference = {"status": status, "name": ref, "copy": copy, "type": typ, "dependon": dep}
-						# excelReference.append(reference)
 					elif refExists and not copyExists and not typeExists and not depExists:
 						prevAllExist = False
 					else:
@@ -217,6 +220,8 @@ class excelSheet():
 					prevAllExist = True
 					error = True
 			### chcek repeats
+			if copy == self.copyBlockedText:
+				copy = None
 			if copy != 'None' and copy:
 				if copy in allCopy and not copy in repeat:
 					repeat[copy] = allCopy[copy]
