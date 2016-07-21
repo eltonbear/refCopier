@@ -27,7 +27,6 @@ class browse(Frame):
 		self.filePathEntry.grid(row = 0, column = 2, columnspan = 5, padx=2, pady=2)
 
 	def makeButtons(self):
-		### Create buttons for Cancel, Ok, and Browse and set their positions
 		if self.isXmlNotXlsx:
 			browseText = "Browse xml"
 		else:
@@ -54,7 +53,6 @@ class browse(Frame):
 		self.parent.destroy()
 
 	def OK(self):
-		### Command when Ok button is clicked	
 		self.filePath = self.filePathEntry.get()						
 		if self.filePath == "":
 			self.emptyFileNameWarning()
