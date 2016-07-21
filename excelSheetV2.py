@@ -196,7 +196,6 @@ class excelSheet():
 					elif refExists and not copyExists and not typeExists and not depExists:
 						prevAllExist = False
 					else:
-						print(typ, row)
 						if not refExists:
 							missingRef.append(row)
 						if not copyExists:
@@ -232,7 +231,6 @@ class excelSheet():
 					allCopy[copy] = [row]
 
 			row = str(int(row) + 1)
-		# print(excelReference)
 		errorText = None
 		if missingRef or missingCopy or missingType or missingDep or repeat or wrongSeqRow:
 			errorText = writeErrorMessage(missingRef, missingCopy, missingType, missingDep, repeat, wrongSeqRow)
@@ -242,46 +240,41 @@ class excelSheet():
 def writeErrorMessage(missingRefRow, missingCopyRow, missingTypeRow, missingDepRow, repeatRefRow, wrongSequenceRow):
 	message = ""
 	if missingRefRow:
-		message = message + "Missing Reference Number at Row: "
+		message = message + "\nMissing Reference Number at Row: "
 		for i in range(0, len(missingRefRow) - 1):
 			message = message + missingRefRow[i] + ", "
-		message = message + missingRefRow[-1] + "\n\n"
+		message = message + missingRefRow[-1] + "\n"
 
 	if missingCopyRow:
-		message = message + "Missing Copying Number at Row: "
+		message = message + "\nMissing Copying Number at Row: "
 		for i in range(0, len(missingCopyRow) - 1):
 			message = message + missingCopyRow[i] + ", "
-		message = message + missingCopyRow[-1] + "\n\n"
+		message = message + missingCopyRow[-1] + "\n"
 
 	if missingTypeRow:
-		message = message + "Missing Reference Type at Row: "
+		message = message + "\nMissing Reference Type at Row: "
 		for i in range(0, len(missingTypeRow) - 1):
 			message = message + missingTypeRow[i] + ", "
-		message = message + missingTypeRow[-1] + "\n\n"
+		message = message + missingTypeRow[-1] + "\n"
 
 	if missingDepRow:
-		message = message + "Missing Dependent Number at Row: "
+		message = message + "\nMissing Dependent Number at Row: "
 		for i in range(0, len(missingDepRow) - 1):
 			message = message + missingDepRow[i] + ", "
-		message = message + missingDepRow[-1] + "\n\n"
-
+		message = message + missingDepRow[-1] + "\n"
+ 
 	if repeatRefRow:
 		for ref in sorted(repeatRefRow.keys()):
-			message = message + "R" + ref + " is repeated at Row: "
+			message = message + "\nR" + ref + " is repeated at Row: "
 			for i in range(0, len(repeatRefRow[ref]) -1):
 				message = message + repeatRefRow[ref][i] + ", "
-			message = message + repeatRefRow[ref][-1] + "\n"
+			message = message + repeatRefRow[ref][-1]
 		message = message + "\n"
 
 	if wrongSequenceRow:
-		message = message + "Sequence Incorrect at Row: "
+		message = message + "\nSequence Incorrect at Row: "
 		for i in range(0, len(wrongSequenceRow) - 1):
 			message = message + wrongSequenceRow[i] + ", "
-		message = message + wrongSequenceRow[-1] + "\n" 
+		message = message + wrongSequenceRow[-1] + "\n"  
 
 	return message
-
-				
-# test = excelSheet()
-# f = r"C:\Users\eltoshon\Desktop\programTestiing\xmltest1_instruction.xlsx"
-# test.readExcelSheet(f)
