@@ -40,10 +40,3 @@ class errorMessage(Frame):
 		self.parent.destroy()
 
 
-	
-
-# a= Tk()
-# x = errorMessage(a, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-# a.mainloop()
-
-
