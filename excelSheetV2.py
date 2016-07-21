@@ -131,7 +131,7 @@ class excelSheet():
 		except KeyError:
 			message = "Cannot find excel sheet - " + self.workSheetName + "!"
 			cantFindSheetWindow = Tk()
-			stiff= errorMessage(cantFindSheetWindow, message, None, False)
+			warning = errorMessage(cantFindSheetWindow, message, None, False)
 			cantFindSheetWindow.mainloop()
 			return None, None, None
 			
