@@ -46,7 +46,7 @@ class first(Frame):
 	def importSheet(self):
 		self.hideWinodw()
 		windowBS = Toplevel()
-		importS = browse(windowBS, self, True)
+		importS = browse(windowBS, self, False)
 		windowBS.mainloop()
 
 ### errorMessage interface
@@ -195,7 +195,6 @@ def readXMLAndStartSheet(filePath, folderPath, fileName):
 def readSheetAndModifyXML(filePath, folderPath, fileName):
 	excelRead = excelSheet()
 	xmlPath, refExcelDict, error = excelRead.readExcelSheet(filePath)
-	print(xmlPath, refExcelDict, error)
 	if xmlPath and refExcelDict:
 		if error:
 			### there is an error
