@@ -24,6 +24,8 @@ class excelSheet():
 		self.copyBlockedText = 'BLOCKED'
 
 	def startNewExcelSheet(self, xmlFilePath, refNumList, refGap, typeList, depList, wireList):
+		if len(refGap) > len(refNumList):
+			return "The number of missing refs: " + str(len(refGap)) + " > the number of existing refs: " + str(len(refNumList))
 		xmlFolderPath, xmlFileName = splitFileFolderAndName(xmlFilePath)
 		xlsxFileName = xmlFileName + '_instruction.xlsx'
 		xlsxFilePath = xmlFolderPath + '/' + xlsxFileName
@@ -69,6 +71,7 @@ class excelSheet():
 		lastRefRow = int(self.titleRow) + int(refNumList[-1])
 		fstAppendRow = str(int(lastRefRow) + 1)
 		lastAppendRow = str(int(lastRefRow) + len(refNumList) - len(refGap))
+		print(lastRefRow, fstAppendRow, lastAppendRow)
 		refNumber = 1	
 		refListIndex = 0
 		for rowN in range(int(self.firstInputRow), int(lastAppendRow) + 1):
@@ -107,7 +110,8 @@ class excelSheet():
 		### add comment
 		copyTitleComment = 'Input a name of any existing refernces from the XML file (number only).\nAll gaps need to be filled out'
 		worksheet.write_comment(self.copyC + self.titleRow, copyTitleComment, {'author': 'Elton', 'width': 250, 'height': 50})
-		worksheet.write_comment(self.statusC + fstAppendRow, 'Optional Section', {'author': 'Elton', 'width': 100, 'height': 15})
+		if fstAppendRow <= lastAppendRow:
+			worksheet.write_comment(self.statusC + fstAppendRow, 'Optional Section', {'author': 'Elton', 'width': 100, 'height': 15})
 		if refGap:
 			worksheet.write_comment(self.statusC + str(int(refGap[0]) + int(self.titleRow)), 'Reference gaps in xml file' , {'author': 'Elton', 'width': 140, 'height': 15})
 
