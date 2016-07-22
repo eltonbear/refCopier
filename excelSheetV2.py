@@ -116,24 +116,22 @@ class excelSheet():
 			workbook.close()
 		except PermissionError:
 			message = "Please close the existing Excel Sheet!"
-			closeFileWindow = Tk()
-			warning = errorMessage(closeFileWindow, message, None, False)
-			closeFileWindow.mainloop()
+			return message
 
 		startfile(xlsxFilePath)
+		return None
 
 	def readExcelSheet(self, xlsxFilePath):
 		try:
 			workbook = op.load_workbook(filename = xlsxFilePath, read_only = True, data_only=True)
 			worksheet = workbook.get_sheet_by_name(self.workSheetName)
 		except op.utils.exceptions.InvalidFileException:
-			return 0, 0, 0
+			_, fileName = splitFileFolderAndName(xlsxFilePath)
+			message = "File: " + fileName + " - format incorrect!"
+			return None, None, message
 		except KeyError:
 			message = "Cannot find excel sheet - " + self.workSheetName + "!"
-			cantFindSheetWindow = Tk()
-			warning = errorMessage(cantFindSheetWindow, message, None, False)
-			cantFindSheetWindow.mainloop()
-			return None, None, None
+			return None, None, message
 			
 		xmlFilePath = worksheet[self.xmlFilePathCell].value[5:]
 		lastRow = worksheet[self.lastAppendRowCell].value # str

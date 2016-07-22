@@ -18,7 +18,6 @@ class errorMessage(Frame):
 		self.parent.title("Error Message")
 		self.messageFrame.pack(fill = BOTH, expand = True)
 		self.makeButtons()
-		####
 		var = StringVar()
 		label = Message(self.messageFrame, textvariable=var, relief=RAISED, width = 1000)
 		var.set(self.message)

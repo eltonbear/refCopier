@@ -3,6 +3,11 @@ from tkinter.filedialog import askopenfilename
 from tkinter import messagebox
 from os.path import isfile
 from util import splitFileFolderAndName
+from excelSheetV2 import excelSheet
+from warningWindow import errorMessage
+import xmlTool
+from os import startfile
+
 
 class browse(Frame):
 	def __init__(self, parent, isXML):
@@ -10,7 +15,7 @@ class browse(Frame):
 		self.parent = parent
 		self.filePath = ""
 		self.filePathEntry = None
-		self.isOk = False
+		# self.isOk = False
 		self.clickedBack = False
 		self.isXmlNotXlsx = isXML
 		self.initGUI()
@@ -59,9 +64,32 @@ class browse(Frame):
 		elif not isfile(self.filePath):
 			self.incorrectFileNameWarning()
 		else:
-			self.isOk = True
-			self.closeWindow()
+			folderPath, fileName = splitFileFolderAndName(self.filePath)
+			if self.isXmlNotXlsx:
+				result = readXMLAndStartSheet(self.filePath, folderPath, fileName)
+				if type(result) == str:
+					self.popErrorMessage(result)
+				elif type(result) == list:
+					### creat info files when there is a repeat  
+					self.closeWindow()
+					infoWindow = Tk()
+					errorMessage(infoWindow, result[0], result[1], True)
+					infoWindow.mainloop()
+				else:
+					self.closeWindow()
+			else:
+				result = readSheetAndModifyXML(self.filePath, folderPath, fileName)
+				if type(result) == str:
+					self.popErrorMessage(result)
+				elif type(result) == list:
+					self.closeWindow()
+					errorWindow = Tk()
+					errorMessage(errorWindow, result[0], result[1], True)
+					errorWindow.mainloop()
+				else:
+					self.closeWindow()
 
+			
 	def back(self):
 		self.clickedBack = True
 		self.closeWindow()
@@ -72,7 +100,43 @@ class browse(Frame):
 	def emptyFileNameWarning(self):
 		messagebox.showinfo("Warning", "No files selected!")
 
-	def fileFormatIncorrectWarning(self, fileName):
-		messagebox.showinfo("Warning", "File: " + fileName + " - format incorrect!")
+	def popErrorMessage(self, message):
+		messagebox.showinfo("Warning", message)
+
+def readXMLAndStartSheet(filePath, folderPath, fileName):
+	refNameList, refGap, typeList, depList, wireList = xmlTool.readXML(filePath)
+	if not refNameList or not wireList:
+		return "File: " + fileName + " - format incorrect!"
+	refNameRepeats = xmlTool.checkRepeats(refNameList)
+	if refNameRepeats:        
+		info = xmlTool.XMLInfo(filePath, refNameRepeats, refNameList, refGap, wireList)
+		errorFilePath = folderPath + '/' +  fileName + '_info.txt'
+		return [info, errorFilePath]
+	else:  
+		excelWrite = excelSheet()
+		error = excelWrite.startNewExcelSheet(filePath, refNameList, refGap, typeList, depList, wireList)
+		return error
+	
+def readSheetAndModifyXML(filePath, folderPath, fileName):
+	excelRead = excelSheet()
+	xmlPath, refExcelDict, error = excelRead.readExcelSheet(filePath)
+	print(xmlPath, refExcelDict, error)
+	if xmlPath and refExcelDict:
+		if error:
+			### there is an error
+			errorFilePath = folderPath + '/' + fileName + '_error.txt'
+			return [error, errorFilePath]
+		else:
+			### call xml modifier
+			newXmlFilePath = xmlTool.modifier(xmlPath, refExcelDict)
+			if isfile(newXmlFilePath):
+				startfile(newXmlFilePath)
+				return None
+			else:
+				error = newXmlFilePath
+				return error
+	else:
+		return error
+
 
 

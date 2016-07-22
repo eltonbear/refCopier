@@ -96,7 +96,8 @@ def modifier(xmlFilePath, referenceDictDFromExc):
 	try:
 		tree = ET.parse(xmlFilePath)                                    
 	except ET.ParseError: 
-		return None
+		message = "File: " + xmlFileName + " - format incorrect!"
+		return message
 
 	root = tree.getroot() 
 	### make two lists of all reference elements(objects) and wire elements(objects)
