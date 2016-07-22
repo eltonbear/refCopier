@@ -10,13 +10,12 @@ from os import startfile
 
 
 class browse(Frame):
-	def __init__(self, parent, isXML):
+	def __init__(self, parent, mainLevel, isXML):
 		Frame.__init__(self, parent, width = 1000)
 		self.parent = parent
+		self.mainLevel = mainLevel
 		self.filePath = ""
 		self.filePathEntry = None
-		# self.isOk = False
-		self.clickedBack = False
 		self.isXmlNotXlsx = isXML
 		self.initGUI()
 
@@ -38,7 +37,7 @@ class browse(Frame):
 			browseText = "Browse xlsx"
 		bBrowse = Button(self.entryFrame, text = browseText, width = 12, command = self.getFilePath)	
 		bBrowse.grid(row = 0, column = 1, padx=3, pady=3)
-		bCancel = Button(self, text = "Cancel", width = 10 ,command = self.closeWindow)
+		bCancel = Button(self, text = "Cancel", width = 10 ,command = self.closeMainAndToplevelWindow)
 		bCancel.pack(side = RIGHT,padx=4, pady=2)
 		bBack = Button(self, text = "Back", width = 7, command = self.back)
 		bBack.pack(side = RIGHT,padx=4, pady=2)
@@ -50,9 +49,12 @@ class browse(Frame):
 			fileType = ("XML file", "*.xml")
 		else:
 			fileType = ("Excel Worksheet", "*.xlsx")
-		self.filePath = askopenfilename(filetypes = (fileType, ("All files", "*.*")))
+		self.filePath = askopenfilename(filetypes = (fileType, ("All files", "*.*")), parent = self.parent)
 		self.filePathEntry.delete(0, 'end')
 		self.filePathEntry.insert(0, self.filePath)
+
+	def closeMainAndToplevelWindow(self):
+		self.mainLevel.closeWindow()
 
 	def closeWindow(self):
 		self.parent.destroy()
@@ -71,37 +73,36 @@ class browse(Frame):
 					self.popErrorMessage(result)
 				elif type(result) == list:
 					### creat info files when there is a repeat  
-					self.closeWindow()
+					self.closeMainAndToplevelWindow()
 					infoWindow = Tk()
-					errorMessage(infoWindow, result[0], result[1], True)
+					errorMessage(infoWindow, result[0], result[1])
 					infoWindow.mainloop()
 				else:
-					self.closeWindow()
+					self.closeMainAndToplevelWindow()
 			else:
 				result = readSheetAndModifyXML(self.filePath, folderPath, fileName)
 				if type(result) == str:
 					self.popErrorMessage(result)
 				elif type(result) == list:
-					self.closeWindow()
+					self.closeMainAndToplevelWindow()
 					errorWindow = Tk()
-					errorMessage(errorWindow, result[0], result[1], True)
+					errorMessage(errorWindow, result[0], result[1])
 					errorWindow.mainloop()
 				else:
-					self.closeWindow()
-
+					self.closeMainAndToplevelWindow()
 			
 	def back(self):
-		self.clickedBack = True
 		self.closeWindow()
+		self.mainLevel.showWindow()
 
 	def incorrectFileNameWarning(self):
-		messagebox.showinfo("Warning", "File does not exist!")
+		messagebox.showinfo("Warning", "File does not exist!", parent = self.parent)
 
 	def emptyFileNameWarning(self):
-		messagebox.showinfo("Warning", "No files selected!")
+		messagebox.showinfo("Warning", "No files selected!", parent = self.parent)
 
 	def popErrorMessage(self, message):
-		messagebox.showinfo("Warning", message)
+		messagebox.showinfo("Warning", message, parent = self.parent)
 
 def readXMLAndStartSheet(filePath, folderPath, fileName):
 	refNameList, refGap, typeList, depList, wireList = xmlTool.readXML(filePath)

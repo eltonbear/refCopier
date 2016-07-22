@@ -1,11 +1,10 @@
 from tkinter import *
+from browseInterface import browse
 
 class first(Frame):
 	def __init__(self, parent):
 		self.parent = parent
 		self.initGUI()
-		self.start = False
-		self.importSheet = False
 
 	def initGUI(self):
 		self.parent.title("Reference Copier")
@@ -24,10 +23,27 @@ class first(Frame):
 	def closeWindow(self):
 		self.parent.destroy()
 
+	def hideWinodw(self):
+		self.parent.withdraw()
+
+	def showWindow(self):
+		self.parent.deiconify()
+
 	def startNew(self):
-		self.start = True
-		self.closeWindow()
+		self.hideWinodw()
+		windowBX = Toplevel()
+		startN = browse(windowBX, self, True)
+		windowBX.mainloop()
 
 	def importSheet(self):
-		self.importSheet = True
-		self.closeWindow()
+		self.hideWinodw()
+		windowBS = Toplevel()
+		importS = browse(windowBS, self, True)
+		windowBS.mainloop()
+
+def main():
+	window = Tk()
+	firstW = first(window)
+	window.mainloop()
+
+main()

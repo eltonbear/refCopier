@@ -2,7 +2,6 @@ import xlsxwriter
 from tkinter import Tk
 from os import startfile
 import openpyxl as op
-from warningWindow import errorMessage
 from util import splitFileFolderAndName
 
 class excelSheet():
