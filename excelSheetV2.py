@@ -11,6 +11,7 @@ class excelSheet():
 		self.copyC = 'C'
 		self.typeC = 'D'
 		self.depC = 'E'
+		self.hiddenRefC='U'
 		self.titleRow = '1'
 		self.firstInputRow = str(int(self.titleRow) + 1)
 		self.xmlFilePathCell ='G1'
@@ -71,7 +72,7 @@ class excelSheet():
 		lastRefRow = int(self.titleRow) + int(refNumList[-1])
 		fstAppendRow = str(int(lastRefRow) + 1)
 		lastAppendRow = str(int(lastRefRow) + len(refNumList) - len(refGap))
-		print(lastRefRow, fstAppendRow, lastAppendRow)
+		lastHiddenRefRow = str(len(refNumList))
 		refNumber = 1	
 		refListIndex = 0
 		for rowN in range(int(self.firstInputRow), int(lastAppendRow) + 1):
@@ -80,6 +81,10 @@ class excelSheet():
 				if str(refNumber) in refGap: ### missing ref row
 					worksheet.write(self.statusC + rowS, self.mTag,  missingTagAndRefF)
 					worksheet.write(self.refC + rowS, refNumber,  missingTagAndRefF)
+					f1 = 'COUNTIF($' + self.copyC + '$' + self.firstInputRow + ':$' + self.copyC + '$' + lastAppendRow + ',' + self.copyC + rowS + ')=1'
+					f2 = 'COUNTIF($' + self.hiddenRefC + '$1' + ':$' + self.hiddenRefC + '$' + lastHiddenRefRow + ',' + self.copyC + rowS + ')=1'
+					countFormula = '=AND(' + f1 + ', ' + f2 + ')'
+					worksheet.data_validation(self.copyC + rowS, {'validate': 'custom', 'value': countFormula, 'error_title': 'Warning', 'error_message': 'Reference number does not exist or Duplicates!', 'error_type': 'stop'}) 
 					worksheet.write(self.copyC + rowS, None,  missingUnblockedF)
 					worksheet.write(self.typeC + rowS, None,  missingUnblockedF)
 					worksheet.write_formula(self.depC + rowS, '=' + self.copyC + rowS, missingDepBlockedF)
@@ -88,6 +93,7 @@ class excelSheet():
 				else:  ### existing ref row
 					worksheet.write(self.statusC + rowS, self.eTag, existingWhiteBlockedF)
 					worksheet.write(self.refC + rowS, refNumber, centerF)
+					worksheet.write(self.hiddenRefC + str(refListIndex+1), refNumList[refListIndex], existingWhiteBlockedF)
 					worksheet.write(self.copyC + rowS, self.copyBlockedText, copyBlockedF)
 					worksheet.write(self.typeC + rowS, typeList[refListIndex],  unlocked)
 					worksheet.write(self.depC + rowS, depList[refListIndex],  centerF)
@@ -98,6 +104,10 @@ class excelSheet():
 				worksheet.write(self.statusC + rowS, self.aTag, appendTagAndRefF)
 				worksheet.write(self.refC + rowS, refNumber, appendTagAndRefF)
 				worksheet.write(self.copyC + rowS, None, appendUnblockedF)
+				f1 = 'COUNTIF($' + self.copyC + '$' + self.firstInputRow + ':$' + self.copyC + '$' + lastAppendRow + ',' + self.copyC + rowS + ')=1'
+				f2 = 'COUNTIF($' + self.hiddenRefC + '$1' + ':$' + self.hiddenRefC + '$' + lastHiddenRefRow + ',' + self.copyC + rowS + ')=1'
+				countFormula = '=AND(' + f1 + ', ' + f2 + ')'
+				worksheet.data_validation(self.copyC + rowS, {'validate': 'custom', 'value': countFormula, 'error_title': 'Warning', 'error_message': 'Reference number does not exist or Duplicates!', 'error_type': 'stop'})
 				worksheet.write(self.typeC + rowS, None,  appendUnblockedF)
 				worksheet.write_formula(self.depC + rowS, '=' + self.copyC + rowS, appendDepBlockedF)
 				worksheet.conditional_format(self.depC + rowS, {'type': 'cell', 'criteria': 'equal to', 'value': 0, 'format': appendDepBlockedBlankF})
@@ -105,7 +115,6 @@ class excelSheet():
 			refNumber = refNumber + 1
 
 		worksheet.write(self.lastAppendRowCell, rowN,  existingWhiteBlockedF)
-
 
 		### add comment
 		copyTitleComment = 'Input a name of any existing refernces from the XML file (number only).\nAll gaps need to be filled out'
