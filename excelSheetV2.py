@@ -136,11 +136,11 @@ class excelSheet():
 		worksheet.write(self.lastAppendRowCell, int(lastAppendRow),  existingWhiteBlockedF)
 		worksheet.write(self.hiddenRefCountCell, len(refNumList),  existingWhiteBlockedF)
 
-		## import VBA
+		### import VBA
 		workbook.add_vba_project('vbaProject.bin')
 		workbook.set_vba_name("ThisWorkbook")
 		worksheet.set_vba_name("Sheet1")
-
+		### add VBA buttons
 		worksheet.insert_button(self.vbaButtonC + str(lastRefRow - 1), {'macro': 'appendARow',
 		                               								 	'caption': 'Append',
 		                               								 	'width': 128,
@@ -150,6 +150,7 @@ class excelSheet():
 		                               								 		 'caption': 'Undo',
 		                               								 		 'width': 128,
 		                              								 		 'height': 40})
+		### merger two cells beteen the two buttons
 		worksheet.merge_range(self.vbaButtonC + str(lastRefRow + 1) + ':' +  chr(ord(self.vbaButtonC)+1) + str(lastRefRow + 1), None)
 
 		### add comment
