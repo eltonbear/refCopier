@@ -12,14 +12,15 @@ class excelSheet():
 		self.typeC = 'D'
 		self.depC = 'E'
 		self.hiddenRefC='U'
-		self.hiddenRefCountCell = 'V1'
 		self.titleRow = '1'
 		self.firstInputRow = str(int(self.titleRow) + 1)
 		self.xmlFilePathCell ='G1'
 		self.wireTagCell = 'G3'
 		self.wireCountCell = 'G4'
-		self.lastAppendRowCell = 'F2'
+		self.lastAppendRowCell = 'F3'
+		self.appendRowCountCell = 'F2' 
 		self.lastRefRowCell = 'F1'
+		self.hiddenRefCountCell = 'V1'
 		self.mTag = 'missing'
 		self.eTag = 'existing'
 		self.aTag = 'appending'
@@ -33,7 +34,7 @@ class excelSheet():
 		xlsxFileName = xmlFileName + '_instruction.xlsm'
 		xlsxFilePath = xmlFolderPath + '/' + xlsxFileName
 		workbook = xlsxwriter.Workbook(xlsxFilePath)
-		worksheet = workbook.add_worksheet(self.workSheetName)
+		worksheet = workbook.add_worksheet(self.workSheetName) #self.workSheetName
 
 		### add cell format
 		unlocked = workbook.add_format({'locked': 0, 'valign': 'vcenter', 'align': 'center'})
@@ -44,12 +45,12 @@ class excelSheet():
 		missingUnblockedF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#FFC7CE', 'locked': 0, 'border': 1, 'border_color': '#b2b2b2'})
 		missingDepBlockedF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#FFC7CE', 'locked': 1, 'hidden': 1,'border': 1, 'border_color': '#b2b2b2'})
 		missingDepBlockedBlankF = workbook.add_format({'bg_color': '#FFC7CE', 'font_color': '#FFC7CE', 'locked': 1, 'hidden': 1,'border': 1, 'border_color': '#b2b2b2'})
-		existingWhiteBlockedF = workbook.add_format({'font_color': 'white', 'locked': 1})
+		existingWhiteBlockedF = workbook.add_format({'font_color': 'white', 'locked': 1, 'hidden': 1})
 		appendTagAndRefF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'font_color': 'white', 'bg_color': '#92cddc', 'locked': 1, 'border': 1, 'border_color': '#b2b2b2'})
 		appendUnblockedF =  workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#92cddc', 'locked': 0,'border': 1, 'border_color': '#b2b2b2'})
 		appendDepBlockedF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#92cddc', 'locked': 1, 'hidden': 1, 'border': 1, 'border_color': '#b2b2b2'})
 		appendDepBlockedBlankF = workbook.add_format({'bg_color': '#92cddc', 'font_color': '#92cddc', 'locked': 1, 'hidden': 1, 'border': 1, 'border_color': '#b2b2b2'})
-		appendDepBlockedBlankWhiteF = workbook.add_format({'bg_color': 'white', 'font_color': 'white', 'locked': 1, 'hidden': 1, 'border': 1, 'border_color': '#d9d9d9'})
+		appendDepBlockedBlankWhiteF = workbook.add_format({'font_color': 'white', 'locked': 1, 'hidden': 1})
 
 		### activate protection
 		worksheet.protect('elton')
@@ -92,16 +93,15 @@ class excelSheet():
 					worksheet.write(self.typeC + rowS, None,  missingUnblockedF)
 					worksheet.write_formula(self.depC + rowS, '=' + self.copyC + rowS, missingDepBlockedF)
 					worksheet.conditional_format(self.depC + rowS, {'type': 'cell', 'criteria': 'equal to', 'value': 0, 'format': missingDepBlockedBlankF})
-					worksheet.data_validation(self.copyC + rowS, {'validate': 'list', 'source': refNumList,'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'})  ####?????????
 				else:  ### existing ref row
 					worksheet.write(self.statusC + rowS, self.eTag, existingWhiteBlockedF)
 					worksheet.write(self.refC + rowS, refNumber, centerF)
-					worksheet.write(self.hiddenRefC + str(refListIndex+1), int(refNumList[refListIndex]), existingWhiteBlockedF) ########################adsfguilgeartyjuk
+					worksheet.write(self.hiddenRefC + str(refListIndex+1), int(refNumList[refListIndex]), existingWhiteBlockedF)
 					worksheet.write(self.copyC + rowS, self.copyBlockedText, copyBlockedF)
 					worksheet.write(self.typeC + rowS, typeList[refListIndex],  unlocked)
 					worksheet.write(self.depC + rowS, depList[refListIndex],  centerF)
 					worksheet.conditional_format(self.depC + rowS, {'type': 'text', 'criteria': 'containing', 'value': 'none','format': existingWhiteBlockedF})
-					worksheet.data_validation(self.depC + rowS, {'validate': 'list', 'source': refNumList,'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'})
+					worksheet.data_validation(self.depC + rowS, {'validate': 'list', 'source': refNumList,'dropdown': False,'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'})
 					refListIndex += 1
 			else: ### append section
 				if not refGap or rowS == fstAppendRow:
@@ -111,37 +111,46 @@ class excelSheet():
 					worksheet.write(self.typeC + rowS, None,  appendUnblockedF)
 					worksheet.write_formula(self.depC + rowS, '=' + self.copyC + rowS, appendDepBlockedF)
 				else:
-					worksheet.write(self.depC + rowS, " ")
+					worksheet.write(self.depC + rowS, "None", appendDepBlockedBlankWhiteF)
 				worksheet.conditional_format(self.depC + rowS, {'type': 'cell', 'criteria': 'equal to', 'value': 0, 'format': appendDepBlockedBlankF})
 				f1 = 'COUNTIF($' + self.copyC + '$' + self.firstInputRow + ':$' + self.copyC + '$' + lastAppendRow + ',' + self.copyC + rowS + ')=1'
 				f2 = 'COUNTIF($' + self.hiddenRefC + '$1' + ':$' + self.hiddenRefC + '$' + lastHiddenRefRow + ',' + self.copyC + rowS + ')=1'
 				countFormula = '=AND(' + f1 + ', ' + f2 + ')'
 				worksheet.data_validation(self.copyC + rowS, {'validate': 'custom', 'value': countFormula, 'error_title': 'Warning', 'error_message': 'Reference number does not exist or Duplicates!', 'error_type': 'stop'})
-				worksheet.data_validation(self.copyC + rowS, {'validate': 'list', 'source': refNumList,'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'}) ####?????????????
 			refNumber = refNumber + 1
 		### hidden info in excel sheet
 		if not refGap:
 			worksheet.write(self.lastRefRowCell, rowN,  existingWhiteBlockedF)
+			worksheet.write(self.appendRowCountCell, rowN,  existingWhiteBlockedF)
 		else:
 			worksheet.write(self.lastRefRowCell, int(fstAppendRow),  existingWhiteBlockedF)
-		worksheet.write(self.lastAppendRowCell, lastAppendRow,  existingWhiteBlockedF)
-		worksheet.write(self.hiddenRefCountCell, len(refNumList), existingWhiteBlockedF)
+			worksheet.write(self.appendRowCountCell, int(fstAppendRow),  existingWhiteBlockedF)
+		worksheet.write(self.lastAppendRowCell, int(lastAppendRow),  existingWhiteBlockedF)
+		worksheet.write(self.hiddenRefCountCell, len(refNumList),  existingWhiteBlockedF)
 
-		### import VBA
+		## import VBA
 		workbook.add_vba_project('vbaProject.bin')
+		workbook.set_vba_name("ThisWorkbook")
+		worksheet.set_vba_name("Sheet1")
 
-		worksheet.insert_button(self.wireTagCell[0] + fstAppendRow, {'macro': 'changeRowFormat',
-		                               								 'caption': 'Append',
-		                               								 'width': 80,
-		                              								 'height': 30})
+		worksheet.insert_button(self.wireTagCell[0] + str(lastRefRow - 1), {'macro': 'appendARow',
+		                               								 		'caption': 'Append',
+		                               								 		'width': 139,
+		                              								 		'height': 40})
+
+		worksheet.insert_button(self.wireTagCell[0] + str(int(fstAppendRow)+1), {'macro': 'undoRow',
+		                               								 			 'caption': 'Undo',
+		                               								 			 'width': 139,
+		                              								 			 'height': 40})
 
 		### add comment
 		copyTitleComment = 'Input a name of any existing refernces from the XML file (number only).\nAll gaps need to be filled out'
 		worksheet.write_comment(self.copyC + self.titleRow, copyTitleComment, {'author': 'Elton', 'width': 250, 'height': 50})
+		worksheet.write_comment(self.depC + self.titleRow, "Double click to unlock or lock cells", {'author': 'Elton', 'width': 173, 'height': 16})
 		if fstAppendRow <= lastAppendRow:
 			worksheet.write_comment(self.statusC + fstAppendRow, 'Optional Section', {'author': 'Elton', 'width': 100, 'height': 15})
 		if refGap:
-			worksheet.write_comment(self.statusC + str(int(refGap[0]) + int(self.titleRow)), 'Reference gaps in xml file' , {'author': 'Elton', 'width': 140, 'height': 15})
+			worksheet.write_comment(self.statusC + str(int(refGap[0]) + int(self.titleRow)), 'Reference gaps in xml file' , {'author': 'Elton', 'width': 130, 'height': 15})
 
 		try:
 			workbook.close()
