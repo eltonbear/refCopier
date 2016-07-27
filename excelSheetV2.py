@@ -41,6 +41,7 @@ class excelSheet():
 		unlocked = workbook.add_format({'locked': 0, 'valign': 'vcenter', 'align': 'center'})
 		centerF = workbook.add_format({'valign': 'vcenter', 'align': 'center'})
 		titleF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#b8cce0', 'font_color': '#1f497d', 'bold': True, 'bottom': 2, 'bottom_color': '#82a5d0'})
+		topBorderF = workbook.add_format({'top': 2, 'top_color': '#82a5d0'})
 		copyBlockedF = workbook.add_format({'bg_color': '#a6a6a6', 'font_color': '#a6a6a6'})
 		missingTagAndRefF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#FFC7CE', 'font_color': '#9C0006', 'border': 1, 'border_color': '#b2b2b2'   })
 		missingUnblockedF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#FFC7CE', 'locked': 0, 'border': 1, 'border_color': '#b2b2b2'})
@@ -120,9 +121,15 @@ class excelSheet():
 				worksheet.data_validation(self.copyC + rowS, {'validate': 'custom', 'value': countFormula, 'error_title': 'Warning', 'error_message': 'Reference number does not exist or Duplicates!', 'error_type': 'stop'})
 			refNumber = refNumber + 1
 		### hidden info in excel sheet
-		if not refGap or fstAppendRow > lastAppendRow: ### meaning no gaps or no appending section:
+		if not refGap or int(fstAppendRow) > int(lastAppendRow): ### meaning no gaps or no appending section:
 			worksheet.write(self.lastRefRowBeforeMacroCell, rowN,  existingWhiteBlockedF)
 			worksheet.write(self.appendRowCountCell, rowN,  existingWhiteBlockedF)
+			if refGap: ### add a topborder color if there is no appending section
+				worksheet.write(self.statusC + fstAppendRow, None, topBorderF)
+				worksheet.write(self.refC + fstAppendRow, None, topBorderF)
+				worksheet.write(self.copyC + fstAppendRow, None, topBorderF)
+				worksheet.write(self.typeC + fstAppendRow, None, topBorderF)
+				worksheet.write(self.depC + fstAppendRow, None, topBorderF)
 		else:
 			worksheet.write(self.lastRefRowBeforeMacroCell, int(fstAppendRow),  existingWhiteBlockedF)
 			worksheet.write(self.appendRowCountCell, int(fstAppendRow),  existingWhiteBlockedF)
@@ -149,7 +156,7 @@ class excelSheet():
 		copyTitleComment = 'Input a name of any existing refernces from the XML file (number only).\nAll gaps need to be filled out'
 		worksheet.write_comment(self.copyC + self.titleRow, copyTitleComment, {'author': 'Elton', 'width': 250, 'height': 50})
 		worksheet.write_comment(self.depC + self.titleRow, "Double click to unlock or lock cells", {'author': 'Elton', 'width': 173, 'height': 16})
-		if fstAppendRow <= lastAppendRow:
+		if int(fstAppendRow) <= int(lastAppendRow):
 			worksheet.write_comment(self.statusC + fstAppendRow, 'Optional Section', {'author': 'Elton', 'width': 100, 'height': 15})
 		if refGap:
 			worksheet.write_comment(self.statusC + str(int(refGap[0]) + int(self.titleRow)), 'Reference gaps in xml file' , {'author': 'Elton', 'width': 130, 'height': 15})
