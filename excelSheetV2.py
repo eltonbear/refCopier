@@ -12,11 +12,12 @@ class excelSheet():
 		self.typeC = 'D'
 		self.depC = 'E'
 		self.hiddenRefC='U'
+		self.vbaButtonC = 'G'
 		self.titleRow = '1'
 		self.firstInputRow = str(int(self.titleRow) + 1)
-		self.xmlFilePathCell ='G1'
-		self.wireTagCell = 'G3'
-		self.wireCountCell = 'G4'
+		self.xmlFilePathCell ='I1'
+		self.wireTagCell = 'I3'
+		self.wireCountCell = 'I4'
 		self.lastAppendRowCell = 'F3'
 		self.appendRowCountCell = 'F2' 
 		self.lastRefRowBeforeMacroCell = 'F1'
@@ -55,7 +56,7 @@ class excelSheet():
 		### activate protection
 		worksheet.protect('elton')
 
-		### set column width and  protection
+		### set column width and protection
 		worksheet.set_column(self.statusC + ':' + self.statusC, 10)
 		worksheet.set_column(self.refC + ':' + self.refC, 20)
 		worksheet.set_column(self.typeC + ':' + self.typeC, 15)
@@ -133,15 +134,16 @@ class excelSheet():
 		workbook.set_vba_name("ThisWorkbook")
 		worksheet.set_vba_name("Sheet1")
 
-		worksheet.insert_button(self.wireTagCell[0] + str(lastRefRow - 1), {'macro': 'appendARow',
-		                               								 		'caption': 'Append',
-		                               								 		'width': 139,
-		                              								 		'height': 40})
+		worksheet.insert_button(self.vbaButtonC + str(lastRefRow - 1), {'macro': 'appendARow',
+		                               								 	'caption': 'Append',
+		                               								 	'width': 128,
+		                              								 	'height': 40})
 
-		worksheet.insert_button(self.wireTagCell[0] + str(int(fstAppendRow)+1), {'macro': 'undoRow',
-		                               								 			 'caption': 'Undo',
-		                               								 			 'width': 139,
-		                              								 			 'height': 40})
+		worksheet.insert_button(self.vbaButtonC + str(int(fstAppendRow)+1), {'macro': 'undoRow',
+		                               								 		 'caption': 'Undo',
+		                               								 		 'width': 128,
+		                              								 		 'height': 40})
+		worksheet.merge_range(self.vbaButtonC + str(lastRefRow + 1) + ':' +  chr(ord(self.vbaButtonC)+1) + str(lastRefRow + 1), None)
 
 		### add comment
 		copyTitleComment = 'Input a name of any existing refernces from the XML file (number only).\nAll gaps need to be filled out'
