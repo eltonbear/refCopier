@@ -19,7 +19,7 @@ class excelSheet():
 		self.wireCountCell = 'G4'
 		self.lastAppendRowCell = 'F3'
 		self.appendRowCountCell = 'F2' 
-		self.lastRefRowCell = 'F1'
+		self.lastRefRowBeforeMacroCell = 'F1'
 		self.hiddenRefCountCell = 'V1'
 		self.mTag = 'missing'
 		self.eTag = 'existing'
@@ -120,10 +120,10 @@ class excelSheet():
 			refNumber = refNumber + 1
 		### hidden info in excel sheet
 		if not refGap:
-			worksheet.write(self.lastRefRowCell, rowN,  existingWhiteBlockedF)
+			worksheet.write(self.lastRefRowBeforeMacroCell, rowN,  existingWhiteBlockedF)
 			worksheet.write(self.appendRowCountCell, rowN,  existingWhiteBlockedF)
 		else:
-			worksheet.write(self.lastRefRowCell, int(fstAppendRow),  existingWhiteBlockedF)
+			worksheet.write(self.lastRefRowBeforeMacroCell, int(fstAppendRow),  existingWhiteBlockedF)
 			worksheet.write(self.appendRowCountCell, int(fstAppendRow),  existingWhiteBlockedF)
 		worksheet.write(self.lastAppendRowCell, int(lastAppendRow),  existingWhiteBlockedF)
 		worksheet.write(self.hiddenRefCountCell, len(refNumList),  existingWhiteBlockedF)
@@ -174,7 +174,7 @@ class excelSheet():
 			return None, None, message
 			
 		xmlFilePath = worksheet[self.xmlFilePathCell].value[5:]
-		lastRow = worksheet[self.lastAppendRowCell].value # str ################################################################
+		lastRow = worksheet[self.appendRowCountCell].value # int 
 
 		excelReference = {'og': {}, 'add': {}, 'newRefName': []}
 		missingRef = []
@@ -189,7 +189,7 @@ class excelSheet():
 		row  = self.firstInputRow
 		prevAllExist = True
 		error = False
-		while int(row) <= int(lastRow): #####################
+		while int(row) <= lastRow: #####################
 			status = worksheet[self.statusC + row].value
 			ref = str(worksheet[self.refC + row].value)
 			copy = str(worksheet[self.copyC + row].value)
@@ -201,8 +201,10 @@ class excelSheet():
 			typeExists = typ and typ !='None'
 			depExists = dep and dep != 'None' and dep != '0' ### with formula 
 			depCellEmpty = dep == None or dep == 'None'      ### if gets modified by users and left empty
+			print(dep, depExists, row)
 			if dep == 'None':
 				dep = None
+			print(dep)
 			if status == self.eTag: 
 				if refExists and copyExists and typeExists and not error:
 					excelReference['og'][ref] = [typ, dep]
