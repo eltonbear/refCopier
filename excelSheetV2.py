@@ -120,7 +120,7 @@ class excelSheet():
 				worksheet.data_validation(self.copyC + rowS, {'validate': 'custom', 'value': countFormula, 'error_title': 'Warning', 'error_message': 'Reference number does not exist or Duplicates!', 'error_type': 'stop'})
 			refNumber = refNumber + 1
 		### hidden info in excel sheet
-		if not refGap:
+		if not refGap or fstAppendRow > lastAppendRow: ### meaning no gaps or no appending section:
 			worksheet.write(self.lastRefRowBeforeMacroCell, rowN,  existingWhiteBlockedF)
 			worksheet.write(self.appendRowCountCell, rowN,  existingWhiteBlockedF)
 		else:
