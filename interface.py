@@ -127,7 +127,7 @@ class browse(Frame):
 		else:
 			fileType1 = ("Excel Workbook", "*.xlsx")
 			fileType2 = ("Excel Macro-Enabled Workbook", "*.xlsm")
-			self.filePath = askopenfilename(filetypes = (fileType1, fileType2, ("All files", "*.*")), parent = self.parent)
+			self.filePath = askopenfilename(filetypes = (fileType2, fileType1, ("All files", "*.*")), parent = self.parent)
 		self.filePathEntry.delete(0, 'end')
 		self.filePathEntry.insert(0, self.filePath)
 
