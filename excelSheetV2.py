@@ -34,7 +34,7 @@ class excelSheet():
 		xlsxFileName = xmlFileName + '_instruction.xlsm'
 		xlsxFilePath = xmlFolderPath + '/' + xlsxFileName
 		workbook = xlsxwriter.Workbook(xlsxFilePath)
-		worksheet = workbook.add_worksheet(self.workSheetName) #self.workSheetName
+		worksheet = workbook.add_worksheet(self.workSheetName)
 
 		### add cell format
 		unlocked = workbook.add_format({'locked': 0, 'valign': 'vcenter', 'align': 'center'})
@@ -155,7 +155,7 @@ class excelSheet():
 		try:
 			workbook.close()
 		except PermissionError:
-			message = "Please close the existing Excel Sheet!"
+			message = "Please close the existing Excel Workbook!"
 			return message
 
 		startfile(xlsxFilePath)
@@ -189,7 +189,7 @@ class excelSheet():
 		row  = self.firstInputRow
 		prevAllExist = True
 		error = False
-		while int(row) <= lastRow: #####################
+		while int(row) <= lastRow:
 			status = worksheet[self.statusC + row].value
 			ref = str(worksheet[self.refC + row].value)
 			copy = str(worksheet[self.copyC + row].value)
@@ -201,10 +201,8 @@ class excelSheet():
 			typeExists = typ and typ !='None'
 			depExists = dep and dep != 'None' and dep != '0' ### with formula 
 			depCellEmpty = dep == None or dep == 'None'      ### if gets modified by users and left empty
-			print(dep, depExists, row)
 			if dep == 'None':
 				dep = None
-			print(dep)
 			if status == self.eTag: 
 				if refExists and copyExists and typeExists and not error:
 					excelReference['og'][ref] = [typ, dep]

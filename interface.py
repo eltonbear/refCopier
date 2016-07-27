@@ -107,9 +107,11 @@ class browse(Frame):
 	def makeButtons(self):
 		if self.isXmlNotXlsx:
 			browseText = "Browse xml"
+			width = 11
 		else:
-			browseText = "Browse xlsx"
-		bBrowse = Button(self.entryFrame, text = browseText, width = 12, command = self.getFilePath)	
+			browseText = "Browse xlsx or xlsm"
+			width = 17
+		bBrowse = Button(self.entryFrame, text = browseText, width = width, command = self.getFilePath)	
 		bBrowse.grid(row = 0, column = 1, padx=3, pady=3)
 		bCancel = Button(self, text = "Cancel", width = 10 ,command = self.closeMainAndToplevelWindow)
 		bCancel.pack(side = RIGHT,padx=4, pady=2)
@@ -122,8 +124,9 @@ class browse(Frame):
 		if self.isXmlNotXlsx:
 			fileType = ("XML file", "*.xml")
 		else:
-			fileType = ("Excel Worksheet", "*.xlsx")
-		self.filePath = askopenfilename(filetypes = (fileType, ("All files", "*.*")), parent = self.parent)
+			fileType1 = ("Excel Workbook", "*.xlsx")
+			fileType2 = ("Excel Macro-Enabled Workbook", "*.xlsm")
+		self.filePath = askopenfilename(filetypes = (fileType1, fileType2, ("All files", "*.*")), parent = self.parent)
 		self.filePathEntry.delete(0, 'end')
 		self.filePathEntry.insert(0, self.filePath)
 
