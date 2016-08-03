@@ -11,16 +11,18 @@ class excelSheet():
 		self.copyC = 'C'
 		self.typeC = 'D'
 		self.depC = 'E'
+		self.wireSCounC = 'F'
+		self.wireDcount = 'G'
 		self.hiddenRefC='U'
-		self.vbaButtonC = 'G'
+		self.vbaButtonC = 'I'
 		self.titleRow = '1'
 		self.firstInputRow = str(int(self.titleRow) + 1)
-		self.xmlFilePathCell ='I1'
-		self.wireTagCell = 'I3'
-		self.wireCountCell = 'I4'
-		self.lastAppendRowCell = 'F3'
-		self.appendRowCountCell = 'F2' 
-		self.lastRefRowBeforeMacroCell = 'F1'
+		self.xmlFilePathCell ='K1'
+		self.wireTagCell = 'K3'
+		self.wireCountCell = 'K4'
+		self.lastAppendRowCell = 'H3'
+		self.appendRowCountCell = 'H2' 
+		self.lastRefRowBeforeMacroCell = 'H1'
 		self.hiddenRefCountCell = 'V1'
 		self.mTag = 'missing'
 		self.eTag = 'existing'
@@ -62,6 +64,8 @@ class excelSheet():
 		worksheet.set_column(self.refC + ':' + self.refC, 20)
 		worksheet.set_column(self.typeC + ':' + self.typeC, 15)
 		worksheet.set_column(self.depC + ':' + self.depC, 17)
+		worksheet.set_column(self.wireSCounC + ':' + self.wireSCounC, 13)
+		worksheet.set_column(self.wireDcount + ':' + self.wireDcount, 13)
 		worksheet.set_column(self.wireTagCell[0] + ':' + self.wireTagCell[0], 10)
 
 		### write title
@@ -70,6 +74,8 @@ class excelSheet():
 		worksheet.write(self.copyC + self.titleRow, 'Copy (R)', titleF)
 		worksheet.write(self.typeC + self.titleRow, 'Reference Type', titleF)
 		worksheet.write(self.depC + self.titleRow, 'Dependent On (R)', titleF)
+		worksheet.write(self.wireSCounC + self.titleRow, 'Wire S Count', titleF)
+		worksheet.write(self.wireDcount + self.titleRow, 'Wire D Count', titleF)
 		worksheet.write(self.wireTagCell, "Wire Count", centerF)
 		worksheet.write(self.wireCountCell, len(wireList), centerF)
 		worksheet.write(self.xmlFilePathCell, 'XML: ' + xmlFilePath)
