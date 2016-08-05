@@ -25,6 +25,7 @@ def readXML(xmlFilePath):
 	dependon = []
 	numOfwire = len(wireE)
 	numOfRef = len(referenceE)
+	wireCount = {'total': numOfwire}
 
 	### obtain gaps
 	for i in range(0, numOfRef):
@@ -43,8 +44,22 @@ def readXML(xmlFilePath):
 			prevNum = currNum
 		else:
 			prevNum = int(numberS)
+	### obtain wire count --> wireCount = {totalWireCount: n, '1'(refNum): [s, d]}
+	for wireIndex in range(0, numOfwire):
+		source = re.findall('\d+', wireE[wireIndex].findall('Bond')[0].find('Refsys').text)[0] #str
+		destination = re.findall('\d+', wireE[wireIndex].findall('Bond')[1].find('Refsys').text)[0]
+		if source in wireCount:
+			wireCount[source][0] = wireCount[source][0] + 1
+		else:
+			wireCount[source] = [1, 0]
+		if destination in wireCount:
+			wireCount[destination][1] = wireCount[destination][1] + 1
+		else:
+			wireCount[destination] = [0, 1]
+
+	print(wireCount)
 		
-	return refName, refNameGap, typ, dependon, wireE
+	return refName, refNameGap, typ, dependon, wireCount
 
 def checkRepeats(refNameList):
 	''' Check if there is any repeating reference. Return a list of lists of a name of repeating ref(str) and count(int)'''
@@ -56,9 +71,9 @@ def checkRepeats(refNameList):
 			repeat.append([s, count])
 	return repeat
 
-def XMLInfo(xmlFilePath, repRef, refName, refGap, wireList):
+def XMLInfo(xmlFilePath, repRef, refName, refGap, wireCount):
 	numR = len(refName)
-	numW = len(wireList)
+	numW = wireCount['total']
 
 	if exists(xmlFilePath):
 		info = ""

@@ -11,8 +11,9 @@ class excelSheet():
 		self.copyC = 'C'
 		self.typeC = 'D'
 		self.depC = 'E'
-		self.wireSCounC = 'F'
-		self.wireDcount = 'G'
+		self.wireSCountC = 'F'
+		self.wireDCountC = 'G'
+		#self.wireNewDcountC = 'H'
 		self.hiddenRefC='U'
 		self.vbaButtonC = 'I'
 		self.titleRow = '1'
@@ -30,7 +31,7 @@ class excelSheet():
 		self.workSheetName = 'Reference_copying'
 		self.copyBlockedText = 'BLOCKED'
 
-	def startNewExcelSheet(self, xmlFilePath, refNumList, refGap, typeList, depList, wireList):
+	def startNewExcelSheet(self, xmlFilePath, refNumList, refGap, typeList, depList, wireCount):
 		if len(refGap) > len(refNumList):
 			return "The number of missing refs: " + str(len(refGap)) + " > the number of existing refs: " + str(len(refNumList))
 		xmlFolderPath, xmlFileName = splitFileFolderAndName(xmlFilePath)
@@ -45,10 +46,11 @@ class excelSheet():
 		titleF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#b8cce0', 'font_color': '#1f497d', 'bold': True, 'bottom': 2, 'bottom_color': '#82a5d0'})
 		topBorderF = workbook.add_format({'top': 2, 'top_color': '#82a5d0'})
 		copyBlockedF = workbook.add_format({'bg_color': '#a6a6a6', 'font_color': '#a6a6a6'})
-		missingTagAndRefF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#FFC7CE', 'font_color': '#9C0006', 'border': 1, 'border_color': '#b2b2b2'   })
+		missingTagAndRefF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#FFC7CE', 'font_color': '#9C0006', 'border': 1, 'border_color': '#b2b2b2'})
 		missingUnblockedF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#FFC7CE', 'locked': 0, 'border': 1, 'border_color': '#b2b2b2'})
 		missingDepBlockedF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#FFC7CE', 'locked': 1, 'hidden': 1,'border': 1, 'border_color': '#b2b2b2'})
 		missingDepBlockedBlankF = workbook.add_format({'bg_color': '#FFC7CE', 'font_color': '#FFC7CE', 'locked': 1, 'hidden': 1,'border': 1, 'border_color': '#b2b2b2'})
+		missingWireCountF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#FFC7CE', 'border': 1, 'border_color': '#b2b2b2'})
 		existingWhiteBlockedF = workbook.add_format({'font_color': 'white', 'locked': 1, 'hidden': 1})
 		appendTagAndRefF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'font_color': 'white', 'bg_color': '#92cddc', 'locked': 1, 'border': 1, 'border_color': '#b2b2b2'})
 		appendUnblockedF =  workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#92cddc', 'locked': 0,'border': 1, 'border_color': '#b2b2b2'})
@@ -64,8 +66,9 @@ class excelSheet():
 		worksheet.set_column(self.refC + ':' + self.refC, 20)
 		worksheet.set_column(self.typeC + ':' + self.typeC, 15)
 		worksheet.set_column(self.depC + ':' + self.depC, 17)
-		worksheet.set_column(self.wireSCounC + ':' + self.wireSCounC, 13)
-		worksheet.set_column(self.wireDcount + ':' + self.wireDcount, 13)
+		worksheet.set_column(self.wireSCountC + ':' + self.wireSCountC, 13)
+		worksheet.set_column(self.wireDCountC + ':' + self.wireDCountC, 13)
+		# worksheet.set_column(self.wireNewDcountC + ':' + self.wireNewDcountC, 16)
 		worksheet.set_column(self.wireTagCell[0] + ':' + self.wireTagCell[0], 10)
 
 		### write title
@@ -74,10 +77,11 @@ class excelSheet():
 		worksheet.write(self.copyC + self.titleRow, 'Copy (R)', titleF)
 		worksheet.write(self.typeC + self.titleRow, 'Reference Type', titleF)
 		worksheet.write(self.depC + self.titleRow, 'Dependent On (R)', titleF)
-		worksheet.write(self.wireSCounC + self.titleRow, 'Wire S Count', titleF)
-		worksheet.write(self.wireDcount + self.titleRow, 'Wire D Count', titleF)
+		worksheet.write(self.wireSCountC + self.titleRow, 'Wire S Count', titleF)
+		worksheet.write(self.wireDCountC + self.titleRow, 'Wire D Count', titleF)
+		# worksheet.write(self.wireNewDcountC + self.titleRow, 'Wire D New Count', titleF)
 		worksheet.write(self.wireTagCell, "Wire Count", centerF)
-		worksheet.write(self.wireCountCell, len(wireList), centerF)
+		worksheet.write(self.wireCountCell, wireCount['total'], centerF)
 		worksheet.write(self.xmlFilePathCell, 'XML: ' + xmlFilePath)
 
 		### write rows
@@ -101,6 +105,8 @@ class excelSheet():
 					worksheet.write(self.typeC + rowS, None,  missingUnblockedF)
 					worksheet.write_formula(self.depC + rowS, '=' + self.copyC + rowS, missingDepBlockedF)
 					worksheet.conditional_format(self.depC + rowS, {'type': 'cell', 'criteria': 'equal to', 'value': 0, 'format': missingDepBlockedBlankF})
+					worksheet.write(self.wireSCountC + rowS, 0, missingWireCountF)
+					worksheet.write(self.wireDCountC + rowS, 0, missingWireCountF)
 				else:  ### existing ref row
 					worksheet.write(self.statusC + rowS, self.eTag, existingWhiteBlockedF)
 					worksheet.write(self.refC + rowS, refNumber, centerF)
@@ -110,6 +116,12 @@ class excelSheet():
 					worksheet.write(self.depC + rowS, depList[refListIndex],  centerF)
 					worksheet.conditional_format(self.depC + rowS, {'type': 'text', 'criteria': 'containing', 'value': 'none','format': existingWhiteBlockedF})
 					worksheet.data_validation(self.depC + rowS, {'validate': 'list', 'source': refNumList,'dropdown': False,'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'})
+					if str(refNumber) in wireCount:
+						worksheet.write(self.wireSCountC + rowS, wireCount[str(refNumber)][0], centerF)
+						worksheet.write(self.wireDCountC + rowS, wireCount[str(refNumber)][1], centerF)
+					else:
+						worksheet.write(self.wireSCountC + rowS, 0, centerF)
+						worksheet.write(self.wireDCountC + rowS, 0, centerF)
 					refListIndex += 1
 			else: ### append section
 				if not refGap or rowS == fstAppendRow:
@@ -118,6 +130,8 @@ class excelSheet():
 					worksheet.write(self.copyC + rowS, None, appendUnblockedF)
 					worksheet.write(self.typeC + rowS, None,  appendUnblockedF)
 					worksheet.write_formula(self.depC + rowS, '=' + self.copyC + rowS, appendDepBlockedF)
+					worksheet.write(self.wireSCountC + rowS, None, appendDepBlockedF)
+					worksheet.write(self.wireDCountC + rowS, None, appendDepBlockedF)					
 				else:
 					worksheet.write(self.depC + rowS, "None", appendDepBlockedBlankWhiteF)
 				worksheet.conditional_format(self.depC + rowS, {'type': 'cell', 'criteria': 'equal to', 'value': 0, 'format': appendDepBlockedBlankF})
@@ -153,7 +167,7 @@ class excelSheet():
 		                              								 	'height': 40})
 
 		worksheet.insert_button(self.vbaButtonC + str(int(fstAppendRow)+1), {'macro': 'undoRow',
-		                               								 		 'caption': 'Undo',
+		                               								 		 'caption': 'UnAppend',
 		                               								 		 'width': 128,
 		                              								 		 'height': 40})
 		### merger two cells beteen the two buttons
@@ -288,7 +302,7 @@ class excelSheet():
 		errorText = None
 		if missingRef or missingCopy or missingType or missingDep or repeat or wrongSeqRow:
 			errorText = writeErrorMessage(missingRef, missingCopy, missingType, missingDep, repeat, wrongSeqRow)
-
+		print(excelReference)
 		return xmlFilePath, excelReference, errorText
 
 def writeErrorMessage(missingRefRow, missingCopyRow, missingTypeRow, missingDepRow, repeatRefRow, wrongSequenceRow):

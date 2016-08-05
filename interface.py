@@ -183,17 +183,17 @@ class browse(Frame):
 		messagebox.showinfo("Warning", message, parent = self.parent)
 
 def readXMLAndStartSheet(filePath, folderPath, fileName):
-	refNameList, refGap, typeList, depList, wireList = xmlTool.readXML(filePath)
-	if not refNameList or not wireList:
+	refNameList, refGap, typeList, depList, wireCount = xmlTool.readXML(filePath)
+	if not refNameList or not wireCount:
 		return "File: " + fileName + " - format incorrect!"
 	refNameRepeats = xmlTool.checkRepeats(refNameList)
 	if refNameRepeats:        
-		info = xmlTool.XMLInfo(filePath, refNameRepeats, refNameList, refGap, wireList)
+		info = xmlTool.XMLInfo(filePath, refNameRepeats, refNameList, refGap, wireCount)
 		errorFilePath = folderPath + '/' +  fileName + '_info.txt'
 		return [info, errorFilePath]
 	else:  
 		excelWrite = excelSheet()
-		error = excelWrite.startNewExcelSheet(filePath, refNameList, refGap, typeList, depList, wireList)
+		error = excelWrite.startNewExcelSheet(filePath, refNameList, refGap, typeList, depList, wireCount)
 		return error
 	
 def readSheetAndModifyXML(filePath, folderPath, fileName):
