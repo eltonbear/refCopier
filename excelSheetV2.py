@@ -6,6 +6,7 @@ from util import splitFileFolderAndName
 
 class excelSheet():
 	def __init__(self):
+		### Set columns
 		self.statusC = 'A'
 		self.refC = 'B'
 		self.copyC = 'C'
@@ -13,30 +14,37 @@ class excelSheet():
 		self.depC = 'E'
 		self.wireSCountC = 'F'
 		self.wireDCountC = 'G'
-		#self.wireNewDcountC = 'H'
+		self.wireNewDcountC = 'H'
 		self.hiddenRefC='U'
-		self.vbaButtonC = 'I'
+		self.vbaButtonC = 'J'
+		### Set rows
 		self.titleRow = '1'
 		self.firstInputRow = str(int(self.titleRow) + 1)
-		self.xmlFilePathCell ='K1'
-		self.wireTagCell = 'K3'
-		self.wireCountCell = 'K4'
-		self.lastAppendRowCell = 'H3'
-		self.appendRowCountCell = 'H2' 
-		self.lastRefRowBeforeMacroCell = 'H1'
+		### Set cell address
+		self.xmlFilePathCell ='L1'
+		self.wireTagCell = 'L3'
+		self.wireCountCell = 'L4'
+		self.lastAppendRowCell = 'I3'
+		self.appendRowCountCell = 'I2' 
+		self.lastRefRowBeforeMacroCell = 'I1'
 		self.hiddenRefCountCell = 'V1'
+		### Set rag names
 		self.mTag = 'missing'
 		self.eTag = 'existing'
 		self.aTag = 'appending'
 		self.workSheetName = 'Reference_copying'
 		self.copyBlockedText = 'BLOCKED'
 
-	def startNewExcelSheet(self, xmlFilePath, refNumList, refGap, typeList, depList, wireCount):
+	def startNewExcelSheet(self, xmlFilePath, refNumList, refGap, typeList, depList, wireSDInfo):
+		### if the number of gaps > the number of existing references, it's an error
 		if len(refGap) > len(refNumList):
 			return "The number of missing refs: " + str(len(refGap)) + " > the number of existing refs: " + str(len(refNumList))
+
+		### get folder name and xml file name without extension/ name xlsm file path
 		xmlFolderPath, xmlFileName = splitFileFolderAndName(xmlFilePath)
 		xlsxFileName = xmlFileName + '_instruction.xlsm'
 		xlsxFilePath = xmlFolderPath + '/' + xlsxFileName
+		### creat workbook and worksheet
 		workbook = xlsxwriter.Workbook(xlsxFilePath)
 		worksheet = workbook.add_worksheet(self.workSheetName)
 
@@ -58,7 +66,7 @@ class excelSheet():
 		appendDepBlockedBlankF = workbook.add_format({'bg_color': '#92cddc', 'font_color': '#92cddc', 'locked': 1, 'hidden': 1, 'border': 1, 'border_color': '#b2b2b2'})
 		appendDepBlockedBlankWhiteF = workbook.add_format({'font_color': 'white', 'locked': 1, 'hidden': 1})
 
-		### activate protection
+		### activate protection with password "elton"
 		worksheet.protect('elton')
 
 		### set column width and protection
@@ -68,7 +76,7 @@ class excelSheet():
 		worksheet.set_column(self.depC + ':' + self.depC, 17)
 		worksheet.set_column(self.wireSCountC + ':' + self.wireSCountC, 13)
 		worksheet.set_column(self.wireDCountC + ':' + self.wireDCountC, 13)
-		# worksheet.set_column(self.wireNewDcountC + ':' + self.wireNewDcountC, 16)
+		worksheet.set_column(self.wireNewDcountC + ':' + self.wireNewDcountC, 17)
 		worksheet.set_column(self.wireTagCell[0] + ':' + self.wireTagCell[0], 10)
 
 		### write title
@@ -79,9 +87,9 @@ class excelSheet():
 		worksheet.write(self.depC + self.titleRow, 'Dependent On (R)', titleF)
 		worksheet.write(self.wireSCountC + self.titleRow, 'Wire S Count', titleF)
 		worksheet.write(self.wireDCountC + self.titleRow, 'Wire D Count', titleF)
-		# worksheet.write(self.wireNewDcountC + self.titleRow, 'Wire D New Count', titleF)
+		worksheet.write(self.wireNewDcountC + self.titleRow, 'Wire New D Count', titleF)
 		worksheet.write(self.wireTagCell, "Wire Count", centerF)
-		worksheet.write(self.wireCountCell, wireCount['total'], centerF)
+		worksheet.write(self.wireCountCell, wireSDInfo['total'], centerF)
 		worksheet.write(self.xmlFilePathCell, 'XML: ' + xmlFilePath)
 
 		### write rows
@@ -97,16 +105,24 @@ class excelSheet():
 				if str(refNumber) in refGap: ### missing ref row
 					worksheet.write(self.statusC + rowS, self.mTag,  missingTagAndRefF)
 					worksheet.write(self.refC + rowS, refNumber,  missingTagAndRefF)
+					### wire formula for datavalidation. it prevents duplicates and anything outside the list
 					f1 = 'COUNTIF($' + self.copyC + '$' + self.firstInputRow + ':$' + self.copyC + '$' + lastAppendRow + ',' + self.copyC + rowS + ')=1'
 					f2 = 'COUNTIF($' + self.hiddenRefC + '$1' + ':$' + self.hiddenRefC + '$' + lastHiddenRefRow + ',' + self.copyC + rowS + ')=1'
 					countFormula = '=AND(' + f1 + ', ' + f2 + ')'
 					worksheet.data_validation(self.copyC + rowS, {'validate': 'custom', 'value': countFormula, 'error_title': 'Warning', 'error_message': 'Reference number does not exist or Duplicates!', 'error_type': 'stop'}) 
 					worksheet.write(self.copyC + rowS, None,  missingUnblockedF)
 					worksheet.write(self.typeC + rowS, None,  missingUnblockedF)
+					### formulas for dependon cells
 					worksheet.write_formula(self.depC + rowS, '=' + self.copyC + rowS, missingDepBlockedF)
 					worksheet.conditional_format(self.depC + rowS, {'type': 'cell', 'criteria': 'equal to', 'value': 0, 'format': missingDepBlockedBlankF})
 					worksheet.write(self.wireSCountC + rowS, 0, missingWireCountF)
 					worksheet.write(self.wireDCountC + rowS, 0, missingWireCountF)
+					### formulas for Wire new D Count cell
+					###=IF(ISBLANK(C7), 0, INDIRECT("G" & C7+1))
+					wireDFormula = '=IF(ISBLANK(C7), 0, INDIRECT(' + self.wireDCountC + '& ' + self.copyC + row + '+1))'
+					worksheet.write_formula(self.wireNewDcountC + rowS, '=' + self.copyC + rowS, missingWireCountF)
+
+					#wireDFormula = '=IF(COUNTIF(' + self.copy + self.firstInputRow + ':' + self.copy + lastAppendRow + ', ' + ') > 0, )'
 				else:  ### existing ref row
 					worksheet.write(self.statusC + rowS, self.eTag, existingWhiteBlockedF)
 					worksheet.write(self.refC + rowS, refNumber, centerF)
@@ -116,9 +132,9 @@ class excelSheet():
 					worksheet.write(self.depC + rowS, depList[refListIndex],  centerF)
 					worksheet.conditional_format(self.depC + rowS, {'type': 'text', 'criteria': 'containing', 'value': 'none','format': existingWhiteBlockedF})
 					worksheet.data_validation(self.depC + rowS, {'validate': 'list', 'source': refNumList,'dropdown': False,'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'})
-					if str(refNumber) in wireCount:
-						worksheet.write(self.wireSCountC + rowS, wireCount[str(refNumber)][0], centerF)
-						worksheet.write(self.wireDCountC + rowS, wireCount[str(refNumber)][1], centerF)
+					if str(refNumber) in wireSDInfo:
+						worksheet.write(self.wireSCountC + rowS, wireSDInfo[str(refNumber)][0], centerF)
+						worksheet.write(self.wireDCountC + rowS, wireSDInfo[str(refNumber)][1], centerF)
 					else:
 						worksheet.write(self.wireSCountC + rowS, 0, centerF)
 						worksheet.write(self.wireDCountC + rowS, 0, centerF)

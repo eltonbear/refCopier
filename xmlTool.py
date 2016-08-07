@@ -6,16 +6,17 @@ from util import splitFileFolderAndName
 
 def readXML(xmlFilePath):
 	parseFailure = False
+	### try parse xml file. if it fails, xml file format is incorrect
 	try:
 		tree = ET.parse(xmlFilePath)                                    
 	except ET.ParseError: 
 		parseFailure  = True
-
+	### try to get reference and wire elements in xml file. If there either one does not exist, xm file format is incorrect
 	if not parseFailure:
 		root = tree.getroot() 
 		referenceE = root.findall('ReferenceSystem')
 		wireE = root.findall('Wire')
-
+	### if there is an error, return None for all 
 	if parseFailure or not referenceE or not wireE:
 		return None, None, None, None, None
 
@@ -23,10 +24,12 @@ def readXML(xmlFilePath):
 	refNameGap = [] #list of missing ref numbers in str
 	typ = []
 	dependon = []
-	numOfwire = len(wireE)
 	numOfRef = len(referenceE)
-	wireCount = {'total': numOfwire}
 
+	### obtain wire source and destination information and total count 
+	wireSDCount = readWireSDInfo(wireE)
+	print(wireSDCount)
+	
 	### obtain gaps
 	for i in range(0, numOfRef):
 		numberS = re.findall('\d+', referenceE[i].find('Name').text)[0]
@@ -44,22 +47,33 @@ def readXML(xmlFilePath):
 			prevNum = currNum
 		else:
 			prevNum = int(numberS)
-	### obtain wire count --> wireCount = {totalWireCount: n, '1'(refNum): [s, d]}
-	for wireIndex in range(0, numOfwire):
-		source = re.findall('\d+', wireE[wireIndex].findall('Bond')[0].find('Refsys').text)[0] #str
-		destination = re.findall('\d+', wireE[wireIndex].findall('Bond')[1].find('Refsys').text)[0]
-		if source in wireCount:
-			wireCount[source][0] = wireCount[source][0] + 1
-		else:
-			wireCount[source] = [1, 0]
-		if destination in wireCount:
-			wireCount[destination][1] = wireCount[destination][1] + 1
-		else:
-			wireCount[destination] = [0, 1]
+	
+	return refName, refNameGap, typ, dependon, wireSDCount
 
-	print(wireCount)
-		
-	return refName, refNameGap, typ, dependon, wireCount
+def readWireSDInfo(wireElements):
+	### obtain wire count --> wireSDInfo = {totalWireCount: n, 'refNum': {s:[], d:[]}}
+	sourceKey = 'source'
+	desKey = 'destination'
+	wireSDInfo = {'total': len(wireElements)}
+	for wireIndex in range(0, len(wireElements)):
+		source = re.findall('\d+', wireElements[wireIndex].findall('Bond')[0].find('Refsys').text)[0] #str
+		destination = re.findall('\d+', wireElements[wireIndex].findall('Bond')[1].find('Refsys').text)[0] #str
+		if source in wireSDInfo:
+			if sourceKey in wireSDInfo[source]:
+				wireSDInfo[source][sourceKey].append(wireIndex)
+			else:
+				wireSDInfo[source][sourceKey] = [wireIndex]
+		else:
+			wireSDInfo[source] = {sourceKey: [wireIndex]}
+		if destination in wireSDInfo:
+			if desKey in wireSDInfo[destination]:
+				wireSDInfo[destination][desKey].append(wireIndex)
+			else:
+				wireSDInfo[destination][desKey] = [wireIndex]
+		else:
+			wireSDInfo[destination] = {desKey: [wireIndex]}
+
+	return wireSDInfo
 
 def checkRepeats(refNameList):
 	''' Check if there is any repeating reference. Return a list of lists of a name of repeating ref(str) and count(int)'''
