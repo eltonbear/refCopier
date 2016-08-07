@@ -118,11 +118,8 @@ class excelSheet():
 					worksheet.write(self.wireSCountC + rowS, 0, missingWireCountF)
 					worksheet.write(self.wireDCountC + rowS, 0, missingWireCountF)
 					### formulas for Wire new D Count cell
-					###=IF(ISBLANK(C7), 0, INDIRECT("G" & C7+1))
-					wireDFormula = '=IF(ISBLANK(C7), 0, INDIRECT(' + self.wireDCountC + '& ' + self.copyC + row + '+1))'
-					worksheet.write_formula(self.wireNewDcountC + rowS, '=' + self.copyC + rowS, missingWireCountF)
-
-					#wireDFormula = '=IF(COUNTIF(' + self.copy + self.firstInputRow + ':' + self.copy + lastAppendRow + ', ' + ') > 0, )'
+					wireDFormula = '=IF(ISBLANK(' + self.copyC + rowS + '), 0, INDIRECT("' + self.wireDCountC + '"& ' + self.copyC + rowS + '+1))'
+					worksheet.write_formula(self.wireNewDcountC + rowS, wireDFormula, missingWireCountF)
 				else:  ### existing ref row
 					worksheet.write(self.statusC + rowS, self.eTag, existingWhiteBlockedF)
 					worksheet.write(self.refC + rowS, refNumber, centerF)
@@ -132,12 +129,11 @@ class excelSheet():
 					worksheet.write(self.depC + rowS, depList[refListIndex],  centerF)
 					worksheet.conditional_format(self.depC + rowS, {'type': 'text', 'criteria': 'containing', 'value': 'none','format': existingWhiteBlockedF})
 					worksheet.data_validation(self.depC + rowS, {'validate': 'list', 'source': refNumList,'dropdown': False,'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'})
-					if str(refNumber) in wireSDInfo:
-						worksheet.write(self.wireSCountC + rowS, wireSDInfo[str(refNumber)][0], centerF)
-						worksheet.write(self.wireDCountC + rowS, wireSDInfo[str(refNumber)][1], centerF)
-					else:
-						worksheet.write(self.wireSCountC + rowS, 0, centerF)
-						worksheet.write(self.wireDCountC + rowS, 0, centerF)
+					worksheet.write(self.wireSCountC + rowS, len(wireSDInfo[str(refNumber)]['s']), centerF)
+					worksheet.write(self.wireDCountC + rowS, len(wireSDInfo[str(refNumber)]['d']), centerF)
+					### formulas for Wire new D Count cell
+					wireDFormula = '=IF(COUNTIF(' + self.copyC + self.firstInputRow + ':' + self.copyC + lastAppendRow + ', ' + str(refNumber) + ') > 0, 0, ' + str(len(wireSDInfo[str(refNumber)]['d'])) + ')'
+					worksheet.write_formula(self.wireNewDcountC + rowS, wireDFormula, centerF)
 					refListIndex += 1
 			else: ### append section
 				if not refGap or rowS == fstAppendRow:
@@ -147,14 +143,20 @@ class excelSheet():
 					worksheet.write(self.typeC + rowS, None,  appendUnblockedF)
 					worksheet.write_formula(self.depC + rowS, '=' + self.copyC + rowS, appendDepBlockedF)
 					worksheet.write(self.wireSCountC + rowS, None, appendDepBlockedF)
-					worksheet.write(self.wireDCountC + rowS, None, appendDepBlockedF)					
+					worksheet.write(self.wireDCountC + rowS, None, appendDepBlockedF)	
+					worksheet.write(self.wireDCountC + rowS, None, appendDepBlockedF)
+					### formulas for Wire new D Count cell
+					wireDFormula = '=IF(ISBLANK(' + self.copyC + rowS + '), 0, INDIRECT("' + self.wireDCountC + '"& ' + self.copyC + rowS + '+1))'
+					worksheet.write_formula(self.wireNewDcountC + rowS, wireDFormula, appendDepBlockedF)																
 				else:
 					worksheet.write(self.depC + rowS, "None", appendDepBlockedBlankWhiteF)
 				worksheet.conditional_format(self.depC + rowS, {'type': 'cell', 'criteria': 'equal to', 'value': 0, 'format': appendDepBlockedBlankF})
+				### wire formula for datavalidation. it prevents duplicates and anything outside the list(it writes every row til the last appendable row becuase i dont want to data validation in VBA)
 				f1 = 'COUNTIF($' + self.copyC + '$' + self.firstInputRow + ':$' + self.copyC + '$' + lastAppendRow + ',' + self.copyC + rowS + ')=1'
 				f2 = 'COUNTIF($' + self.hiddenRefC + '$1' + ':$' + self.hiddenRefC + '$' + lastHiddenRefRow + ',' + self.copyC + rowS + ')=1'
 				countFormula = '=AND(' + f1 + ', ' + f2 + ')'
 				worksheet.data_validation(self.copyC + rowS, {'validate': 'custom', 'value': countFormula, 'error_title': 'Warning', 'error_message': 'Reference number does not exist or Duplicates!', 'error_type': 'stop'})
+					
 			refNumber = refNumber + 1
 		### hidden info in excel sheet
 		if not refGap or int(fstAppendRow) > int(lastAppendRow): ### meaning no gaps or no appending section:

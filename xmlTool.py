@@ -28,9 +28,8 @@ def readXML(xmlFilePath):
 
 	### obtain wire source and destination information and total count 
 	wireSDCount = readWireSDInfo(wireE)
-	print(wireSDCount)
 	
-	### obtain gaps
+	### obtain ref, type, dep, and gaps
 	for i in range(0, numOfRef):
 		numberS = re.findall('\d+', referenceE[i].find('Name').text)[0]
 		depS = referenceE[i].find('Dependon')
@@ -47,32 +46,27 @@ def readXML(xmlFilePath):
 			prevNum = currNum
 		else:
 			prevNum = int(numberS)
+
+		if not numberS in wireSDCount:
+			wireSDCount[numberS] = {'s': [], 'd': []}
+	print(wireSDCount)
 	
 	return refName, refNameGap, typ, dependon, wireSDCount
 
 def readWireSDInfo(wireElements):
-	### obtain wire count --> wireSDInfo = {totalWireCount: n, 'refNum': {s:[], d:[]}}
-	sourceKey = 'source'
-	desKey = 'destination'
+	### obtain wire count --> wireSDInfo = {totalWireCount: n, 'refNum': {s:[wireIndex], d:[wireIndex]}}
 	wireSDInfo = {'total': len(wireElements)}
 	for wireIndex in range(0, len(wireElements)):
 		source = re.findall('\d+', wireElements[wireIndex].findall('Bond')[0].find('Refsys').text)[0] #str
 		destination = re.findall('\d+', wireElements[wireIndex].findall('Bond')[1].find('Refsys').text)[0] #str
 		if source in wireSDInfo:
-			if sourceKey in wireSDInfo[source]:
-				wireSDInfo[source][sourceKey].append(wireIndex)
-			else:
-				wireSDInfo[source][sourceKey] = [wireIndex]
+			wireSDInfo[source]['s'].append(wireIndex)
 		else:
-			wireSDInfo[source] = {sourceKey: [wireIndex]}
+			wireSDInfo[source] = {'s': [wireIndex], 'd': []}
 		if destination in wireSDInfo:
-			if desKey in wireSDInfo[destination]:
-				wireSDInfo[destination][desKey].append(wireIndex)
-			else:
-				wireSDInfo[destination][desKey] = [wireIndex]
+			wireSDInfo[destination]['d'].append(wireIndex)
 		else:
-			wireSDInfo[destination] = {desKey: [wireIndex]}
-
+			wireSDInfo[destination] = {'s': [], 'd': [wireIndex]}
 	return wireSDInfo
 
 def checkRepeats(refNameList):
@@ -85,9 +79,9 @@ def checkRepeats(refNameList):
 			repeat.append([s, count])
 	return repeat
 
-def XMLInfo(xmlFilePath, repRef, refName, refGap, wireCount):
+def XMLInfo(xmlFilePath, repRef, refName, refGap, wireSDCount):
 	numR = len(refName)
-	numW = wireCount['total']
+	numW = wireSDCount['total']
 
 	if exists(xmlFilePath):
 		info = ""
