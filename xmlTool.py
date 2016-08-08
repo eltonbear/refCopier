@@ -158,10 +158,11 @@ def modifier(xmlFilePath, referenceDictDFromExc):
 	wireSDInfo = readWireSDInfo(wireE) 
 	addRefDict = referenceDictDFromExc['add']
 	for nName in referenceDictDFromExc['newRefName']:
-		copy = writeARefCopy(referenceEDict[prefix + addRefDict[nName][0]], addRefDict[nName][0], nName, addRefDict[nName][1], prefix)
+		oldNameToCopy = addRefDict[nName][0]
+		copy = writeARefCopy(referenceEDict[prefix + oldNameToCopy], oldNameToCopy, nName, addRefDict[nName][1], prefix)
 		root.insert(int(nName)-1, copy)
 		### Change wire des
-		modifyWireDesRef(addRefDict[nName][0], nName, wireE, wireSDInfo[addRefDict[nName][0]]['d'], prefix)
+		modifyWireDesRef(oldNameToCopy, nName, wireE, wireSDInfo[oldNameToCopy]['d'], prefix)
 	### write to a new xml file
 	newXmlFilePath = xmlFolderPath + "/" + xmlFileName + "_new.xml"
 	tree.write(newXmlFilePath)
