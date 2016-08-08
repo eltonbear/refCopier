@@ -49,7 +49,6 @@ def readXML(xmlFilePath):
 
 		if not numberS in wireSDCount:
 			wireSDCount[numberS] = {'s': [], 'd': []}
-	print(wireSDCount)
 	
 	return refName, refNameGap, typ, dependon, wireSDCount
 
@@ -82,6 +81,7 @@ def checkRepeats(refNameList):
 def XMLInfo(xmlFilePath, repRef, refName, refGap, wireSDCount):
 	numR = len(refName)
 	numW = wireSDCount['total']
+	prefix = 'R'
 
 	if exists(xmlFilePath):
 		info = ""
@@ -102,9 +102,9 @@ def XMLInfo(xmlFilePath, repRef, refName, refGap, wireSDCount):
 		if refGap:
 			for g in refGap:
 				if len(g) == 1:
-					info = info + "R" + str(g[0]) + '\n'
+					info = info + prefix + str(g[0]) + '\n'
 				else:
-					info = info + "R" + str(g[0]) + ' - R' + str(g[1]) + '\n'
+					info = info + prefix + str(g[0]) + ' - ' + prefix + str(g[1]) + '\n'
 		else:
 			info = info + "None\n"
 		info = info + "\n#Number of Wires: " + str(numW) + "\n"
@@ -115,7 +115,8 @@ def XMLInfo(xmlFilePath, repRef, refName, refGap, wireSDCount):
 		
 def modifier(xmlFilePath, referenceDictDFromExc):
 	xmlFolderPath, xmlFileName = splitFileFolderAndName(xmlFilePath)
-	### make a ElementTree object and find its root (highest node)   
+	### make a ElementTree object and find its root (highest node)
+	### if it fails parsing, file format is incorrect  
 	try:
 		tree = ET.parse(xmlFilePath)                                    
 	except ET.ParseError: 
@@ -129,6 +130,7 @@ def modifier(xmlFilePath, referenceDictDFromExc):
 	numOfRef = len(referenceE)
 	numOfWire = len(wireE)
 	referenceEDict = {}
+	prefix = 'R'
 	for r in referenceE: ### Modify existing ref's type and dep if necessary
 		ref = r.find('Name').text
 		typ, dep = referenceDictDFromExc['og'][ref[1:]]
@@ -137,50 +139,57 @@ def modifier(xmlFilePath, referenceDictDFromExc):
 		if dep:
 			if r.find('Dependon') == None:
 				newDepEle = Element('Dependon')
-				newDepEle.text = 'R' + dep
+				newDepEle.text = prefix + dep
 				r.insert(2, newDepEle)
 				indent(newDepEle, 2)
-			elif r.find('Dependon').text != 'R'+ dep:
-				r.find('Dependon').text = 'R' + dep
+			elif r.find('Dependon').text != prefix + dep:
+				r.find('Dependon').text = prefix + dep
 		else:
 			if r.find('Dependon') != None:
 				r.remove(r.find('Dependon'))
-		### make reference element dictionary
+		### make reference element dictionary --> {'referece name(ex: R1)': reference element}
 		referenceEDict[ref] = r
 
+	### Data Structure:
+	### read wire source and destination information and return a dictionary --> wireSDInfo = {totalWireCount: n, 'refNum': {s:[wireIndex], d:[wireIndex]}}
+	### referenceDictDFromExc data structure --> {'og': {'refNum':[type, dependon]}, 'add': {'refNum': [copyNum, type]}, 'newRefName': [str(refNum)]}
+	### addRefDict --> {'str(refNum)': [copyNum, type]}
+	### referenceDictDFromExc['newRefName'] --> [str(refNum)]
+	wireSDInfo = readWireSDInfo(wireE) 
 	addRefDict = referenceDictDFromExc['add']
-	for nName in referenceDictDFromExc['newRefName']:	# sorted(map(int, addRefDict.keys()))
-		copy = writeARefCopy(referenceEDict['R'+addRefDict[nName][0]], addRefDict[nName][0], nName, addRefDict[nName][1])
+	for nName in referenceDictDFromExc['newRefName']:
+		copy = writeARefCopy(referenceEDict[prefix + addRefDict[nName][0]], addRefDict[nName][0], nName, addRefDict[nName][1], prefix)
 		root.insert(int(nName)-1, copy)
 		### Change wire des
-		modifyWireDesRef(addRefDict[nName][0], nName, wireE)
+		modifyWireDesRef(addRefDict[nName][0], nName, wireE, wireSDInfo[addRefDict[nName][0]]['d'], prefix)
 	### write to a new xml file
 	newXmlFilePath = xmlFolderPath + "/" + xmlFileName + "_new.xml"
 	tree.write(newXmlFilePath)
 	return newXmlFilePath
 
-def writeARefCopy(refToCopy, oldName, newName, typ): 
+def writeARefCopy(refEToCopy, oldName, newName, typ, prefix): 
 	### creat new referenceSystem node
 	newRefEle = Element('ReferenceSystem')
 	newNameEle = SubElement(newRefEle, 'Name')
-	newNameEle.text = 'R' + newName
+	newNameEle.text = prefix + newName
 	newTypeEle = SubElement(newRefEle, 'Type')
 	newTypeEle.text = typ
 	newDepEle = SubElement(newRefEle, 'Dependon')
-	newDepEle.text = 'R' + oldName
+	newDepEle.text = prefix + oldName
 	### creat two nodes that refer to original points objects(elements)
-	for p in refToCopy.findall('Point'):
+	for p in refEToCopy.findall('Point'):
 		newRefEle.append(p)
 	### formatting xml text so it prints nicly 
 	indent(newRefEle, 1)
 	### return the reference(address) of the ref element
 	return newRefEle
 
-def modifyWireDesRef(oldDes, newDes, wireElements):
-	for wire in wireElements:
-		secBondDes = wire.findall('Bond')[1].find('Refsys')
-		if secBondDes.text == 'R' + oldDes:
-			secBondDes.text = 'R' + newDes
+def modifyWireDesRef(oldDes, newDes, wireElements, wireIndex, prefix): 
+	### wireIndex is an array of wire element whose destination needs to be modified
+	for index in wireIndex:
+		desBond = wireElements[index].findall('Bond')[1].find('Refsys')
+		if desBond.text == prefix + oldDes:
+			desBond.text = prefix + newDes
 
 ### in-place prettyprint formatter found online --> http://effbot.org/zone/element-lib.htm#prettyprint
 def indent(elem, level=0):
@@ -197,15 +206,3 @@ def indent(elem, level=0):
     else:
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
-
-
-
-
-
-
-
-
-
-
-	
-

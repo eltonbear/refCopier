@@ -24,10 +24,10 @@ class excelSheet():
 		self.xmlFilePathCell ='L1'
 		self.wireTagCell = 'L3'
 		self.wireCountCell = 'L4'
-		self.lastAppendRowCell = 'I3'
-		self.appendRowCountCell = 'I2' 
-		self.lastRefRowBeforeMacroCell = 'I1'
-		self.hiddenRefCountCell = 'V1'
+		self.lastAppendRowCell = 'I4'
+		self.appendRowCountCell = 'I3' 
+		self.lastRefRowBeforeMacroCell = 'I2'
+		self.hiddenLastExistingRefRowCell = 'I1'
 		### Set rag names
 		self.mTag = 'missing'
 		self.eTag = 'existing'
@@ -124,7 +124,7 @@ class excelSheet():
 				else:  ### existing ref row
 					worksheet.write(self.statusC + rowS, self.eTag, existingWhiteBlockedF)
 					worksheet.write(self.refC + rowS, refNumber, centerF)
-					worksheet.write(self.hiddenRefC + str(refListIndex+1), int(refNumList[refListIndex]), existingWhiteBlockedF) ###
+					worksheet.write(self.hiddenRefC + str(refListIndex+1), int(refNumList[refListIndex]), existingWhiteBlockedF)
 					worksheet.write(self.copyC + rowS, self.copyBlockedText, copyBlockedF)
 					worksheet.write(self.typeC + rowS, typeList[refListIndex],  unlocked)
 					worksheet.write(self.depC + rowS, depList[refListIndex],  centerF)
@@ -180,7 +180,7 @@ class excelSheet():
 			worksheet.write(self.lastRefRowBeforeMacroCell, int(fstAppendRow),  existingWhiteBlockedF)
 			worksheet.write(self.appendRowCountCell, int(fstAppendRow),  existingWhiteBlockedF)
 		worksheet.write(self.lastAppendRowCell, int(lastAppendRow),  existingWhiteBlockedF)
-		worksheet.write(self.hiddenRefCountCell, len(refNumList),  existingWhiteBlockedF)
+		worksheet.write(self.hiddenLastExistingRefRowCell, int(refNumList[-1]) + int(self.titleRow),  existingWhiteBlockedF)
 
 		### import VBA
 		workbook.add_vba_project('vbaProject.bin')
@@ -208,6 +208,7 @@ class excelSheet():
 		if refGap:
 			worksheet.write_comment(self.statusC + str(int(refGap[0]) + int(self.titleRow)), 'Reference gaps in xml file' , {'author': 'Elton', 'width': 130, 'height': 15})
 
+		### close workbook. error if there is same workbook open
 		try:
 			workbook.close()
 		except PermissionError:
@@ -231,7 +232,7 @@ class excelSheet():
 			
 		xmlFilePath = worksheet[self.xmlFilePathCell].value[5:]
 		lastRow = worksheet[self.appendRowCountCell].value # int 
-
+		### excelReference data structure --> {'og': {'refNum':[type, dependon]}, 'add': {'refNum': [copyNum, type]}, 'newRefName': [str(refNum)]}
 		excelReference = {'og': {}, 'add': {}, 'newRefName': []}
 		missingRef = []
 		missingCopy = []
@@ -328,7 +329,7 @@ class excelSheet():
 		errorText = None
 		if missingRef or missingCopy or missingType or missingDep or repeat or wrongSeqRow:
 			errorText = writeErrorMessage(missingRef, missingCopy, missingType, missingDep, repeat, wrongSeqRow)
-		print(excelReference)
+			
 		return xmlFilePath, excelReference, errorText
 
 def writeErrorMessage(missingRefRow, missingCopyRow, missingTypeRow, missingDepRow, repeatRefRow, wrongSequenceRow):
