@@ -51,6 +51,7 @@ class excelSheet():
 		### add cell format
 		unlocked = workbook.add_format({'locked': 0, 'valign': 'vcenter', 'align': 'center'})
 		centerF = workbook.add_format({'valign': 'vcenter', 'align': 'center'})
+		centerHiddenF = workbook.add_format({'valign': 'vcenter', 'hidden': 1, 'align': 'center'})
 		titleF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#b8cce0', 'font_color': '#1f497d', 'bold': True, 'bottom': 2, 'bottom_color': '#82a5d0'})
 		topBorderF = workbook.add_format({'top': 2, 'top_color': '#82a5d0'})
 		copyBlockedF = workbook.add_format({'bg_color': '#a6a6a6', 'font_color': '#a6a6a6'})
@@ -59,12 +60,12 @@ class excelSheet():
 		missingDepBlockedF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#FFC7CE', 'locked': 1, 'hidden': 1,'border': 1, 'border_color': '#b2b2b2'})
 		missingDepBlockedBlankF = workbook.add_format({'bg_color': '#FFC7CE', 'font_color': '#FFC7CE', 'locked': 1, 'hidden': 1,'border': 1, 'border_color': '#b2b2b2'})
 		missingWireCountF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#FFC7CE', 'border': 1, 'border_color': '#b2b2b2'})
+		missingWireCountHiddenF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#FFC7CE', 'hidden': 1,'border': 1, 'border_color': '#b2b2b2'})
 		existingWhiteBlockedF = workbook.add_format({'font_color': 'white', 'locked': 1, 'hidden': 1})
 		appendTagAndRefF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'font_color': 'white', 'bg_color': '#92cddc', 'locked': 1, 'border': 1, 'border_color': '#b2b2b2'})
 		appendUnblockedF =  workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#92cddc', 'locked': 0,'border': 1, 'border_color': '#b2b2b2'})
-		appendDepBlockedF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#92cddc', 'locked': 1, 'hidden': 1, 'border': 1, 'border_color': '#b2b2b2'})
-		appendDepBlockedBlankF = workbook.add_format({'bg_color': '#92cddc', 'font_color': '#92cddc', 'locked': 1, 'hidden': 1, 'border': 1, 'border_color': '#b2b2b2'})
-		appendDepBlockedBlankWhiteF = workbook.add_format({'font_color': 'white', 'locked': 1, 'hidden': 1})
+		appendBlockedF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#92cddc', 'locked': 1, 'hidden': 1, 'border': 1, 'border_color': '#b2b2b2'})
+		appendHiddenZeroBlockedF = workbook.add_format({'bg_color': '#92cddc', 'font_color': '#92cddc', 'locked': 1, 'hidden': 1, 'border': 1, 'border_color': '#b2b2b2'})
 
 		### activate protection with password "elton"
 		worksheet.protect('elton')
@@ -105,35 +106,35 @@ class excelSheet():
 				if str(refNumber) in refGap: ### missing ref row
 					worksheet.write(self.statusC + rowS, self.mTag,  missingTagAndRefF)
 					worksheet.write(self.refC + rowS, refNumber,  missingTagAndRefF)
-					### wire formula for datavalidation. it prevents duplicates and anything outside the list
+					worksheet.write(self.copyC + rowS, None,  missingUnblockedF)
+					worksheet.write(self.typeC + rowS, None,  missingUnblockedF)
+					worksheet.write(self.wireSCountC + rowS, 0, missingWireCountF)
+					worksheet.write(self.wireDCountC + rowS, 0, missingWireCountF)
+					### formulas for dependon cells
+					worksheet.write_formula(self.depC + rowS, '=' + self.copyC + rowS, missingDepBlockedF)
+					worksheet.conditional_format(self.depC + rowS, {'type': 'cell', 'criteria': 'equal to', 'value': 0, 'format': missingDepBlockedBlankF})
+					### formulas for wire new D Count cell
+					wireNewDFormula = '=IF(ISBLANK(' + self.copyC + rowS + '), 0, INDIRECT("' + self.wireDCountC + '"& ' + self.copyC + rowS + '+1))'
+					worksheet.write_formula(self.wireNewDcountC + rowS, wireNewDFormula, missingWireCountHiddenF)
+					### wire formula for data validation. it prevents duplicates and anything outside the list
 					f1 = 'COUNTIF($' + self.copyC + '$' + self.firstInputRow + ':$' + self.copyC + '$' + lastAppendRow + ',' + self.copyC + rowS + ')=1'
 					f2 = 'COUNTIF($' + self.hiddenRefC + '$1' + ':$' + self.hiddenRefC + '$' + lastHiddenRefRow + ',' + self.copyC + rowS + ')=1'
 					countFormula = '=AND(' + f1 + ', ' + f2 + ')'
 					worksheet.data_validation(self.copyC + rowS, {'validate': 'custom', 'value': countFormula, 'error_title': 'Warning', 'error_message': 'Reference number does not exist or Duplicates!', 'error_type': 'stop'}) 
-					worksheet.write(self.copyC + rowS, None,  missingUnblockedF)
-					worksheet.write(self.typeC + rowS, None,  missingUnblockedF)
-					### formulas for dependon cells
-					worksheet.write_formula(self.depC + rowS, '=' + self.copyC + rowS, missingDepBlockedF)
-					worksheet.conditional_format(self.depC + rowS, {'type': 'cell', 'criteria': 'equal to', 'value': 0, 'format': missingDepBlockedBlankF})
-					worksheet.write(self.wireSCountC + rowS, 0, missingWireCountF)
-					worksheet.write(self.wireDCountC + rowS, 0, missingWireCountF)
-					### formulas for Wire new D Count cell
-					wireDFormula = '=IF(ISBLANK(' + self.copyC + rowS + '), 0, INDIRECT("' + self.wireDCountC + '"& ' + self.copyC + rowS + '+1))'
-					worksheet.write_formula(self.wireNewDcountC + rowS, wireDFormula, missingWireCountF)
 				else:  ### existing ref row
 					worksheet.write(self.statusC + rowS, self.eTag, existingWhiteBlockedF)
 					worksheet.write(self.refC + rowS, refNumber, centerF)
-					worksheet.write(self.hiddenRefC + str(refListIndex+1), int(refNumList[refListIndex]), existingWhiteBlockedF)
+					worksheet.write(self.hiddenRefC + str(refListIndex+1), int(refNumList[refListIndex]), existingWhiteBlockedF) ###
 					worksheet.write(self.copyC + rowS, self.copyBlockedText, copyBlockedF)
 					worksheet.write(self.typeC + rowS, typeList[refListIndex],  unlocked)
 					worksheet.write(self.depC + rowS, depList[refListIndex],  centerF)
-					worksheet.conditional_format(self.depC + rowS, {'type': 'text', 'criteria': 'containing', 'value': 'none','format': existingWhiteBlockedF})
-					worksheet.data_validation(self.depC + rowS, {'validate': 'list', 'source': refNumList,'dropdown': False,'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'})
 					worksheet.write(self.wireSCountC + rowS, len(wireSDInfo[str(refNumber)]['s']), centerF)
 					worksheet.write(self.wireDCountC + rowS, len(wireSDInfo[str(refNumber)]['d']), centerF)
+					### data validation for dep
+					worksheet.data_validation(self.depC + rowS, {'validate': 'list', 'source': refNumList,'dropdown': False,'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'})
 					### formulas for Wire new D Count cell
-					wireDFormula = '=IF(COUNTIF(' + self.copyC + self.firstInputRow + ':' + self.copyC + lastAppendRow + ', ' + str(refNumber) + ') > 0, 0, ' + str(len(wireSDInfo[str(refNumber)]['d'])) + ')'
-					worksheet.write_formula(self.wireNewDcountC + rowS, wireDFormula, centerF)
+					wireNewDFormula = '=IF(COUNTIF(' + self.copyC + self.firstInputRow + ':' + self.copyC + lastAppendRow + ', ' + str(refNumber) + ') > 0, 0, ' + str(len(wireSDInfo[str(refNumber)]['d'])) + ')'
+					worksheet.write_formula(self.wireNewDcountC + rowS, wireNewDFormula, centerHiddenF)
 					refListIndex += 1
 			else: ### append section
 				if not refGap or rowS == fstAppendRow:
@@ -141,16 +142,20 @@ class excelSheet():
 					worksheet.write(self.refC + rowS, refNumber, appendTagAndRefF)
 					worksheet.write(self.copyC + rowS, None, appendUnblockedF)
 					worksheet.write(self.typeC + rowS, None,  appendUnblockedF)
-					worksheet.write_formula(self.depC + rowS, '=' + self.copyC + rowS, appendDepBlockedF)
-					worksheet.write(self.wireSCountC + rowS, None, appendDepBlockedF)
-					worksheet.write(self.wireDCountC + rowS, None, appendDepBlockedF)	
-					worksheet.write(self.wireDCountC + rowS, None, appendDepBlockedF)
-					### formulas for Wire new D Count cell
-					wireDFormula = '=IF(ISBLANK(' + self.copyC + rowS + '), 0, INDIRECT("' + self.wireDCountC + '"& ' + self.copyC + rowS + '+1))'
-					worksheet.write_formula(self.wireNewDcountC + rowS, wireDFormula, appendDepBlockedF)																
-				else:
-					worksheet.write(self.depC + rowS, "None", appendDepBlockedBlankWhiteF)
-				worksheet.conditional_format(self.depC + rowS, {'type': 'cell', 'criteria': 'equal to', 'value': 0, 'format': appendDepBlockedBlankF})
+					worksheet.write(self.wireSCountC + rowS, 0, appendBlockedF)
+					worksheet.write(self.wireDCountC + rowS, 0, appendBlockedF)	
+					### formulas for dep and Wire new D Count cell
+					worksheet.write_formula(self.depC + rowS, '=' + self.copyC + rowS, appendBlockedF)
+					wireNewDFormula = '=IF(ISBLANK(' + self.copyC + rowS + '), 0, INDIRECT("' + self.wireDCountC + '"& ' + self.copyC + rowS + '+1))'
+					worksheet.write_formula(self.wireNewDcountC + rowS, wireNewDFormula, appendBlockedF)
+				
+				### conditional formats for wire counts --> dont show values if there is no input in copy column
+				wireConditionalFormula = '=AND(ISBLANK(' + self.copyC + rowS + '), NOT(ISBLANK(' + self.statusC + rowS + ')))'
+				worksheet.conditional_format(self.depC + rowS, {'type': 'formula', 'criteria': wireConditionalFormula, 'format': appendHiddenZeroBlockedF})
+				worksheet.conditional_format(self.wireSCountC + rowS, {'type': 'formula', 'criteria': wireConditionalFormula, 'format': appendHiddenZeroBlockedF})
+				worksheet.conditional_format(self.wireDCountC + rowS, {'type': 'formula', 'criteria': wireConditionalFormula, 'format': appendHiddenZeroBlockedF})
+				worksheet.conditional_format(self.wireNewDcountC + rowS, {'type': 'formula', 'criteria': wireConditionalFormula, 'format': appendHiddenZeroBlockedF})
+
 				### wire formula for datavalidation. it prevents duplicates and anything outside the list(it writes every row til the last appendable row becuase i dont want to data validation in VBA)
 				f1 = 'COUNTIF($' + self.copyC + '$' + self.firstInputRow + ':$' + self.copyC + '$' + lastAppendRow + ',' + self.copyC + rowS + ')=1'
 				f2 = 'COUNTIF($' + self.hiddenRefC + '$1' + ':$' + self.hiddenRefC + '$' + lastHiddenRefRow + ',' + self.copyC + rowS + ')=1'
@@ -168,6 +173,9 @@ class excelSheet():
 				worksheet.write(self.copyC + fstAppendRow, None, topBorderF)
 				worksheet.write(self.typeC + fstAppendRow, None, topBorderF)
 				worksheet.write(self.depC + fstAppendRow, None, topBorderF)
+				worksheet.write(self.wireSCountC + fstAppendRow, None, topBorderF)
+				worksheet.write(self.wireDCountC + fstAppendRow, None, topBorderF)
+				worksheet.write(self.wireNewDcountC + fstAppendRow, None, topBorderF)
 		else:
 			worksheet.write(self.lastRefRowBeforeMacroCell, int(fstAppendRow),  existingWhiteBlockedF)
 			worksheet.write(self.appendRowCountCell, int(fstAppendRow),  existingWhiteBlockedF)
