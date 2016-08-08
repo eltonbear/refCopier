@@ -153,16 +153,17 @@ def modifier(xmlFilePath, referenceDictDFromExc):
 	### Data Structure:
 	### read wire source and destination information and return a dictionary --> wireSDInfo = {totalWireCount: n, 'refNum': {s:[wireIndex], d:[wireIndex]}}
 	### referenceDictDFromExc data structure --> {'og': {'refNum':[type, dependon]}, 'add': {'refNum': [copyNum, type]}, 'newRefName': [str(refNum)]}
-	### addRefDict --> {'str(refNum)': [copyNum, type]}
+	### addRefDict --> {'str(refNum)': ['copyNum', type]}
 	### referenceDictDFromExc['newRefName'] --> [str(refNum)]
 	wireSDInfo = readWireSDInfo(wireE) 
 	addRefDict = referenceDictDFromExc['add']
 	for nName in referenceDictDFromExc['newRefName']:
-		oldNameToCopy = addRefDict[nName][0]
-		copy = writeARefCopy(referenceEDict[prefix + oldNameToCopy], oldNameToCopy, nName, addRefDict[nName][1], prefix)
+		refNameToCopy = addRefDict[nName][0]
+		copy = writeARefCopy(referenceEDict[prefix + refNameToCopy], refNameToCopy, nName, addRefDict[nName][1], prefix)
 		root.insert(int(nName)-1, copy)
 		### Change wire des
-		modifyWireDesRef(oldNameToCopy, nName, wireE, wireSDInfo[oldNameToCopy]['d'], prefix)
+		if refNameToCopy in wireSDInfo:
+			modifyWireDesRef(refNameToCopy, nName, wireE, wireSDInfo[refNameToCopy]['d'], prefix)
 	### write to a new xml file
 	newXmlFilePath = xmlFolderPath + "/" + xmlFileName + "_new.xml"
 	tree.write(newXmlFilePath)
