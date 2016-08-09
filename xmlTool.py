@@ -129,11 +129,11 @@ def modifier(xmlFilePath, referenceDictDFromExc):
 	wireE = root.findall('Wire') 
 	numOfRef = len(referenceE)
 	numOfWire = len(wireE)
-	referenceEDict = {}
 	prefix = 'R'
 	for r in referenceE: ### Modify existing ref's type and dep if necessary
 		ref = r.find('Name').text
-		typ, dep = referenceDictDFromExc['og'][ref[1:]]
+		refNumber = re.findall('\d+', ref)[0]
+		typ, dep = referenceDictDFromExc['og'][refNumber]
 		if r.find('Type').text != typ:
 			r.find('Type').text = typ
 		if dep:
@@ -147,8 +147,6 @@ def modifier(xmlFilePath, referenceDictDFromExc):
 		else:
 			if r.find('Dependon') != None:
 				r.remove(r.find('Dependon'))
-		### make reference element dictionary --> {'referece name(ex: R1)': reference element}
-		referenceEDict[ref] = r
 
 	### Data Structure:
 	### read wire source and destination information and return a dictionary --> wireSDInfo = {totalWireCount: n, 'refNum': {s:[wireIndex], d:[wireIndex]}}
@@ -159,7 +157,7 @@ def modifier(xmlFilePath, referenceDictDFromExc):
 	addRefDict = referenceDictDFromExc['add']
 	for nName in referenceDictDFromExc['newRefName']:
 		refNameToCopy = addRefDict[nName][0]
-		copy = writeARefCopy(referenceEDict[prefix + refNameToCopy], refNameToCopy, nName, addRefDict[nName][1], prefix)
+		copy = writeARefCopy(refNameToCopy, nName, addRefDict[nName][1], prefix)
 		root.insert(int(nName)-1, copy)
 		### Change wire des
 		if refNameToCopy in wireSDInfo:
@@ -169,7 +167,7 @@ def modifier(xmlFilePath, referenceDictDFromExc):
 	tree.write(newXmlFilePath)
 	return newXmlFilePath
 
-def writeARefCopy(refEToCopy, oldName, newName, typ, prefix): 
+def writeARefCopy(oldName, newName, typ, prefix): 
 	### creat new referenceSystem node
 	newRefEle = Element('ReferenceSystem')
 	newNameEle = SubElement(newRefEle, 'Name')
@@ -178,9 +176,6 @@ def writeARefCopy(refEToCopy, oldName, newName, typ, prefix):
 	newTypeEle.text = typ
 	newDepEle = SubElement(newRefEle, 'Dependon')
 	newDepEle.text = prefix + oldName
-	### creat two nodes that refer to original points objects(elements)
-	for p in refEToCopy.findall('Point'):
-		newRefEle.append(p)
 	### formatting xml text so it prints nicly 
 	indent(newRefEle, 1)
 	### return the reference(address) of the ref element
