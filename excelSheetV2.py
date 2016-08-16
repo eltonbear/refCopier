@@ -36,9 +36,17 @@ class excelSheet():
 		self.copyBlockedText = 'BLOCKED'
 
 	def startNewExcelSheet(self, xmlFilePath, refNumList, refGap, typeList, depList, wireSDInfo):
+		"""
+
+			parameters
+			----------
+			refGap: list
+			
+		"""
+		numOfGap = len(refGap)
 		### if the number of gaps > the number of existing references, it's an error
-		if len(refGap) > len(refNumList):
-			return "The number of missing refs: " + str(len(refGap)) + " > the number of existing refs: " + str(len(refNumList))
+		if numOfGap > len(refNumList):
+			return "The number of missing refs: " + str(numOfGap) + " > the number of existing refs: " + str(len(refNumList))
 
 		### get folder name and xml file name without extension/ name xlsm file path
 		xmlFolderPath, xmlFileName = splitFileFolderAndName(xmlFilePath)
@@ -93,17 +101,19 @@ class excelSheet():
 		worksheet.write(self.wireCountCell, wireSDInfo['total'], centerF)
 		worksheet.write(self.xmlFilePathCell, 'XML: ' + xmlFilePath)
 
+		#
+		refGapSet = set(refGap)
 		### write rows
 		lastRefRow = int(self.titleRow) + int(refNumList[-1])
 		fstAppendRow = str(int(lastRefRow) + 1)
-		lastAppendRow = str(int(lastRefRow) + len(refNumList) - len(refGap))
+		lastAppendRow = str(int(lastRefRow) + len(refNumList) - numOfGap)
 		lastHiddenRefRow = str(len(refNumList))
 		refNumber = 1	
 		refListIndex = 0
 		for rowN in range(int(self.firstInputRow), int(lastAppendRow) + 1):
 			rowS = str(rowN)
 			if rowN < int(fstAppendRow):
-				if str(refNumber) in refGap: ### missing ref row
+				if str(refNumber) in refGapSet: ### missing ref row
 					worksheet.write(self.statusC + rowS, self.mTag,  missingTagAndRefF)
 					worksheet.write(self.refC + rowS, refNumber,  missingTagAndRefF)
 					worksheet.write(self.copyC + rowS, None,  missingUnblockedF)

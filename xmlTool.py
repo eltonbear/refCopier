@@ -5,31 +5,44 @@ from os.path import exists
 from util import splitFileFolderAndName
 
 def readXML(xmlFilePath):
+	"""Read a XML data file.
+
+		Parameters
+		----------
+		xmlFilePath: string
+
+		Returns
+		-------
+
+
+	"""
+
 	parseFailure = False
-	### try parse xml file. if it fails, xml file format is incorrect
 	try:
+		# Parse xml content
 		tree = ET.parse(xmlFilePath)                                    
 	except ET.ParseError: 
+		# True if it fails parsing
 		parseFailure  = True
-	### try to get reference and wire elements in xml file. If there either one does not exist, xm file format is incorrect
+	# Get root of the xml data tree and all reference and wire elements if xml is parsed successfullyncorrect
 	if not parseFailure:
 		root = tree.getroot() 
 		referenceE = root.findall('ReferenceSystem')
 		wireE = root.findall('Wire')
-	### if there is an error, return None for all 
+	# if there is an error in parsing or getting elements, return None for all 
 	if parseFailure or not referenceE or not wireE:
 		return None, None, None, None, None
 
-	refName = [] #str
-	refNameGap = [] #list of missing ref numbers in str
-	typ = []
-	dependon = []
-	numOfRef = len(referenceE)
+	refName = [] 				# A list of reference numbers in string
+	refNameGap = [] 			# A list of missing reference numbers in string
+	typ = [] 					# A list of refernece types in string
+	dependon = [] 				# A list of reference number that references depend on in string
+	numOfRef = len(referenceE)	# The number of reference elements
 
-	### obtain wire source and destination information and total count 
+	# Obtain wire source and destination information and total count 
 	wireSDCount = readWireSDInfo(wireE)
 	
-	### obtain ref, type, dep, and gaps
+	# Obtain ref, type, dep, and gaps
 	for i in range(0, numOfRef):
 		numberS = re.findall('\d+', referenceE[i].find('Name').text)[0]
 		depS = referenceE[i].find('Dependon')

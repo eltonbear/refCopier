@@ -149,13 +149,13 @@ class browse(Frame):
 	"""A class for browse interface that browses XML or spreadsheets.
 
 		Parameters
-			----------
-			parent: Tk
-				A window for applications.
-			mainLevel: first
-				The first interface (class)
-			isXML: bool
-				True if it's to browse XML. False otherwise.
+		----------
+		parent: Tk
+			A window for applications.
+		mainLevel: first
+			The first interface (class)
+		isXML: bool
+			True if it's to browse XML. False otherwise.
 	"""
 
 	def __init__(self, parent, mainLevel, isXML):
