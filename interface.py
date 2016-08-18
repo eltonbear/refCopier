@@ -95,12 +95,12 @@ class errorMessage(Frame):
 			An error message text file destination. 
 	"""
 
-	def __init__(self, parent, message, textFilePath):
+	def __init__(self, parent, textFilePath, message):
 		"""Creat an error message interface."""
 
 		self.parent = parent				# Main window
-		self.message = message 				# Error message
 		self.textFilePath = textFilePath	# File destination to save to
+		self.message = message 				# Error message
 		# Creat GUI
 		self.initGUI()
 
@@ -261,40 +261,24 @@ class browse(Frame):
 			if self.isXmlNotXlsx:
 				# Read xml and create an Excel sheet
 				result = readXMLAndStartSheet(self.filePath)
-				if type(result) == str:
-					# Show an error message in a pop up window
-					self.popErrorMessage(result)
-				elif type(result) == list:
-					# Repeating reference names
-					# Close both windows
-					self.closeMainAndToplevelWindow()
-					# Creat a window
-					infoWindow = Tk()
-					# Create an error message interface
-					errorMessage(infoWindow, result[0], result[1])
-					# Launch window
-					infoWindow.mainloop()
-				else:
-					# No error and close both windows
-					self.closeMainAndToplevelWindow()
 			else:
 				# Read an Excel sheet and create a new XML file
 				result = readSheetAndModifyXML(self.filePath)
-				if type(result) == str:
-					# Show an error message in a pop up window
-					self.popErrorMessage(result)
-				elif type(result) == list:
-					# Close both windows
-					self.closeMainAndToplevelWindow()
-					# Creat a window
-					errorWindow = Tk()
-					# Create an error message interface
-					errorMessage(errorWindow, result[0], result[1])
-					# Launch window
-					errorWindow.mainloop()
-				else:
-					# No error and close both windows
-					self.closeMainAndToplevelWindow()
+			if result[0]:
+				# Close both windows
+				self.closeMainAndToplevelWindow()
+				# Creat a window
+				errorWindow = Tk()
+				# Create an error message interface
+				errorMessage(errorWindow, result[0], result[1])
+				# Launch window
+				errorWindow.mainloop()
+			elif result[1]:
+				# Show an error message in a pop up window
+				self.popErrorMessage(result[1])
+			else:
+				# No error and close both windows
+				self.closeMainAndToplevelWindow()
 			
 	def back(self):
 		"""Go back to the first interface."""
@@ -339,47 +323,34 @@ def readXMLAndStartSheet(filePath):
 
 		or
 
-		[info, errorFilePath]: list
+		(errorFilePath, info): tuple
 			When there is any repeating referenece names. 
-				info: string
-					Reference systems information.
 				errorFilePath: string
 					Info text file path.
-		or
-
-		error: string
-			An error message from reading Excel spreadsheet.
-
-		or 
-
-		error: None
-			No errors occur when reading Excel spreadsheet.
+				info: string
+					Reference systems information.
 	"""
 
 	# Split file path into folder path and file name without extension
 	folderPath, fileName = splitFileFolderAndName(filePath)
 	# Read xml and get all references' names, missing references' names, types, dependon, and  wire count information
-	refNameList, refGap, typeList, depList, wireCount = xmlTool.readXML(filePath)
-	# If reference name list is None or wireCount dictionary is None, file format is incorrect
-	if not refNameList or not wireCount:
-		return "File: " + fileName + " - format incorrect!"
-	# Check if there is any repeating reference name
-	refNameRepeats = xmlTool.checkRepeats(refNameList)
+	refInfo, wireInfo = xmlTool.readXML(filePath)
+	# If reference name list is None or wireInfo dictionary is None, file format is incorrect
+	if not refInfo or not wireInfo:
+		return ("", "File: " + fileName + " - format incorrect!")
 	# If there is repeating reference name
-	if refNameRepeats: 
+	if refInfo['repeats']: 
 		# Generate a text of information of xml data       
-		info = xmlTool.XMLInfo(filePath, refNameRepeats, refNameList, refGap, wireCount)
+		info = xmlTool.XMLInfo(filePath, refInfo['repeats'], refInfo['name'], refInfo['gap'], wireInfo['total'])
 		# Create a error text file path to save to
 		errorFilePath = folderPath + '/' +  fileName + '_info.txt'
-		return [info, errorFilePath]
+		return (errorFilePath, info)
 	else:  
 		# Create an excelSheet object
 		excelWrite = excelSheet()
 		# Write data into an Excel spreadsheet
-		error = excelWrite.startNewExcelSheet(filePath, refNameList, refGap, typeList, depList, wireCount)
-		# error can be string or None depends if there is any errors
-		return error
-
+		error = excelWrite.startNewExcelSheet(filePath, refInfo, wireInfo)
+		return ("", error)
 
 def readSheetAndModifyXML(filePath):
 	""" Function that reads a Excel sheet and modify a XML file.
@@ -391,22 +362,12 @@ def readSheetAndModifyXML(filePath):
 
 		Returns
 		-------
-		[error, errorFilePath]: list
-			Errors occur when reading Excel sheets.
+		(errorFilePath, error): tuple
+			Errors occur when reading Excel sheets or writing data into xml files.
 			error: string
 				Error message.
 			errorFilePath: string
 				File path of an error text file.
-
-		or
-		
-		error: string
-			Errors occur when writing data into xml files or reading Excel sheets.
-
-		or
-
-		error: None
-			No error occurs.
 	"""
 
 	# Split file path into folder path and file name without extension
@@ -421,7 +382,7 @@ def readSheetAndModifyXML(filePath):
 		if error:
 			# Create an error text file path
 			errorFilePath = folderPath + '/' + fileName + '_error.txt'
-			return [error, errorFilePath]
+			return (errorFilePath, error)
 		else:
 			# Create a new xml file with modified data
 			newXmlFilePathOrError = xmlTool.modifier(xmlPath, refExcelDict)
@@ -430,12 +391,11 @@ def readSheetAndModifyXML(filePath):
 				# Open the new xml file in windows
 				startfile(newXmlFilePathOrError)
 				# No errors
-				return error
-			# There is an error
-			error = newXmlFilePathOrError
-			return error
+				return ("", error)
+			# There is an error--newXmlFilePathOrError is an error message
+			return ("", newXmlFilePathOrError)
 	# Errors occur when reading Excel sheet
-	return error
+	return ("", error)
 
 
 def main():

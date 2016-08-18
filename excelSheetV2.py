@@ -35,7 +35,7 @@ class excelSheet():
 		self.workSheetName = 'Reference_copying'
 		self.copyBlockedText = 'BLOCKED'
 
-	def startNewExcelSheet(self, xmlFilePath, refNumList, refGap, typeList, depList, wireSDInfo):
+	def startNewExcelSheet(self, xmlFilePath, refInfo, wireSDInfo):
 		"""
 
 			parameters
@@ -43,6 +43,9 @@ class excelSheet():
 			refGap: list
 			
 		"""
+		
+		refNumList = refInfo['name']
+		refGap = refInfo['gap']
 		numOfGap = len(refGap)
 		### if the number of gaps > the number of existing references, it's an error
 		if numOfGap > len(refNumList):
@@ -136,8 +139,8 @@ class excelSheet():
 					worksheet.write(self.refC + rowS, refNumber, centerF)
 					worksheet.write(self.hiddenRefC + str(refListIndex+1), int(refNumList[refListIndex]), existingWhiteBlockedF)
 					worksheet.write(self.copyC + rowS, self.copyBlockedText, copyBlockedF)
-					worksheet.write(self.typeC + rowS, typeList[refListIndex],  unlocked)
-					worksheet.write(self.depC + rowS, depList[refListIndex],  centerF)
+					worksheet.write(self.typeC + rowS, refInfo['type'][refListIndex],  unlocked)
+					worksheet.write(self.depC + rowS, refInfo['dependon'][refListIndex],  centerF)
 					worksheet.write(self.wireSCountC + rowS, len(wireSDInfo[str(refNumber)]['s']), centerF)
 					worksheet.write(self.wireDCountC + rowS, len(wireSDInfo[str(refNumber)]['d']), centerF)
 					### data validation for dep
@@ -226,7 +229,7 @@ class excelSheet():
 			return message
 
 		startfile(xlsxFilePath)
-		return None
+		return ""
 
 	def readExcelSheet(self, xlsxFilePath):
 		try:
@@ -336,7 +339,7 @@ class excelSheet():
 					allCopy[copy] = [row]
 
 			row = str(int(row) + 1)
-		errorText = None
+		errorText = ""
 		if missingRef or missingCopy or missingType or missingDep or repeat or wrongSeqRow:
 			errorText = writeErrorMessage(missingRef, missingCopy, missingType, missingDep, repeat, wrongSeqRow)
 			
