@@ -263,7 +263,7 @@ class excelSheet():
 			status = worksheet[self.statusC + row].value
 			ref = str(worksheet[self.refC + row].value)
 			copy = str(worksheet[self.copyC + row].value)
-			typ = worksheet[self.typeC + row].value
+			typ = str(worksheet[self.typeC + row].value)
 			dep = str(worksheet[self.depC + row].value)
 
 			refExists = ref and ref != 'None'

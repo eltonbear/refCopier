@@ -206,6 +206,8 @@ def modifier(xmlFilePath, referenceDictDFromExc):
 			XML file path.
 		referenceDictDFromExc: dictionary
 			A collection of data from an Excel spreadsheet.
+			referenceDictDFromExc data structure --> {'og': {'refNum':[type, dependon]}, 'add': {'refNum': [copyNum, type]}, 'newRefName': ['refNum']}
+
 
 		Returns
 		-------
@@ -220,54 +222,64 @@ def modifier(xmlFilePath, referenceDictDFromExc):
 
 	# Split a XML file path into folder path and file name without the extension
 	xmlFolderPath, xmlFileName = splitFileFolderAndName(xmlFilePath)
-	### make a ElementTree object and find its root (highest node)
-	### if it fails parsing, file format is incorrect  
+	# Try to parse XML file. If there is an error, file format is incorrect.
 	try:
 		tree = ET.parse(xmlFilePath)                                    
 	except ET.ParseError: 
 		message = "File: " + xmlFileName + " - format incorrect!"
 		return message
-
+	# Create ElementTree object and find its root (highest node)
 	root = tree.getroot() 
-	### make two lists of all reference elements(objects) and wire elements(objects)
+	# Create lists of reference elements and wire elements
 	referenceE = root.findall('ReferenceSystem')
 	wireE = root.findall('Wire') 
+	# Get numbers of references and wires
 	numOfRef = len(referenceE)
 	numOfWire = len(wireE)
 	prefix = 'R'
-	for r in referenceE: ### Modify existing ref's type and dep if necessary
+
+	for r in referenceE: 
+		# Get name of the reference
 		ref = r.find('Name').text
+		# Get number in string from name
 		refNumber = re.findall('\d+', ref)[0]
+		# Get type and dependency from Excel inputs
 		typ, dep = referenceDictDFromExc['og'][refNumber]
+		# If types dont match, modify type
 		if r.find('Type').text != typ:
 			r.find('Type').text = typ
 		if dep:
+			# If there is no dependon originally, create and dependon element in the reference
 			if r.find('Dependon') == None:
 				newDepEle = Element('Dependon')
 				newDepEle.text = prefix + dep
 				r.insert(2, newDepEle)
 				indent(newDepEle, 2)
+			# If dependon values dont match, modify the original value
 			elif r.find('Dependon').text != prefix + dep:
 				r.find('Dependon').text = prefix + dep
 		else:
+			# If there is depenon originally, but not in Excel sheet, remove dependon element in XML
 			if r.find('Dependon') != None:
 				r.remove(r.find('Dependon'))
 
-	### Data Structure:
-	### read wire source and destination information and return a dictionary --> wireSDInfo = {totalWireCount: n, 'refNum': {s:[wireIndex], d:[wireIndex]}}
-	### referenceDictDFromExc data structure --> {'og': {'refNum':[type, dependon]}, 'add': {'refNum': [copyNum, type]}, 'newRefName': [str(refNum)]}
-	### addRefDict --> {'str(refNum)': ['copyNum', type]}
-	### referenceDictDFromExc['newRefName'] --> [str(refNum)]
-	wireSDInfo = readWireSDInfo(wireE) 
+
+	# Read wire source and destination information, see function readWieSDInfo
+	wireSDInfo = readWireSDInfo(wireE)
+	# Get a dictionary references to add, addRefDict --> {'str(refNum)': ['copyNum', type]}
 	addRefDict = referenceDictDFromExc['add']
+	# referenceDictDFromExc['newRefName'] --> ['ref num in str']
 	for nName in referenceDictDFromExc['newRefName']:
+		# Get reference name to be copied
 		refNameToCopy = addRefDict[nName][0]
+		# Get a new reference element 
 		copy = writeARefCopy(refNameToCopy, nName, addRefDict[nName][1], prefix)
+		# Insert into reference tree
 		root.insert(int(nName)-1, copy)
-		### Change wire des
+		# Change wire destination
 		if refNameToCopy in wireSDInfo:
 			modifyWireDesRef(refNameToCopy, nName, wireE, wireSDInfo[refNameToCopy]['d'], prefix)
-	### write to a new xml file
+	# Create new XML file path and write data into it
 	newXmlFilePath = xmlFolderPath + "/" + xmlFileName + "_new.xml"
 	tree.write(newXmlFilePath)
 	return newXmlFilePath
@@ -335,16 +347,16 @@ def modifyWireDesRef(oldDes, newDes, wireElements, wireIndex, prefix):
 def indent(elem, level=0):
 	"""In-place prettyprint formatter found online --> http://effbot.org/zone/element-lib.htm #prettyprint."""
 
-    i = "\n" + level*"  "
-    if len(elem):
-        if not elem.text or not elem.text.strip():
-            elem.text = i + "  "
-        if not elem.tail or not elem.tail.strip():
-            elem.tail = i
-        for elem in elem:
-            indent(elem, level+1)
-        if not elem.tail or not elem.tail.strip():
-            elem.tail = i
-    else:
-        if level and (not elem.tail or not elem.tail.strip()):
-            elem.tail = i
+	i = "\n" + level*"  "
+	if len(elem):
+		if not elem.text or not elem.text.strip():
+			elem.text = i + "  "
+		if not elem.tail or not elem.tail.strip():
+			elem.tail = i
+		for elem in elem:
+			indent(elem, level+1)
+		if not elem.tail or not elem.tail.strip():
+			elem.tail = i
+	else:
+		if level and (not elem.tail or not elem.tail.strip()):
+			elem.tail = i
