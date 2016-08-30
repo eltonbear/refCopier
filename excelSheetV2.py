@@ -3,6 +3,7 @@ from tkinter import Tk
 from os import startfile
 import openpyxl as op
 from util import splitFileFolderAndName
+import re
 
 class excelSheet():
 	def __init__(self):
@@ -21,9 +22,11 @@ class excelSheet():
 		self.titleRow = '1'
 		self.firstInputRow = str(int(self.titleRow) + 1)
 		### Set cell address
-		self.xmlFilePathCell ='L1'
-		self.wireTagCell = 'L3'
-		self.wireCountCell = 'L4'
+		self.xmlFilePathCell ='M1'
+		self.wireTagCell = 'M3'
+		self.wireCountCell = 'M4'
+		self.pseudoTitleCell = 'M6'
+		self.realTitleCell = 'N6'
 		self.lastAppendRowCell = 'I4'
 		self.appendRowCountCell = 'I3' 
 		self.lastRefRowBeforeMacroCell = 'I2'
@@ -77,11 +80,14 @@ class excelSheet():
 		appendUnblockedF =  workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#92cddc', 'locked': 0,'border': 1, 'border_color': '#b2b2b2'})
 		appendBlockedF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#92cddc', 'locked': 1, 'hidden': 1, 'border': 1, 'border_color': '#b2b2b2'})
 		appendHiddenZeroBlockedF = workbook.add_format({'bg_color': '#92cddc', 'font_color': '#92cddc', 'locked': 1, 'hidden': 1, 'border': 1, 'border_color': '#b2b2b2'})
+		pseudoRefLetter = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#c6efce', 'font_color': '#006100'})
+
 
 		### activate protection with password "elton"
 		worksheet.protect('elton')
 
 		### set column width and protection
+		wireTagC = re.findall("[a-zA-Z]+", self.wireTagCell)[0]
 		worksheet.set_column(self.statusC + ':' + self.statusC, 10)
 		worksheet.set_column(self.refC + ':' + self.refC, 20)
 		worksheet.set_column(self.typeC + ':' + self.typeC, 15)
@@ -89,7 +95,7 @@ class excelSheet():
 		worksheet.set_column(self.wireSCountC + ':' + self.wireSCountC, 13)
 		worksheet.set_column(self.wireDCountC + ':' + self.wireDCountC, 13)
 		worksheet.set_column(self.wireNewDcountC + ':' + self.wireNewDcountC, 17)
-		worksheet.set_column(self.wireTagCell[0] + ':' + self.wireTagCell[0], 10)
+		worksheet.set_column(wireTagC + ':' + wireTagC, 10)
 
 		### write title
 		worksheet.write(self.statusC + self.titleRow, 'Status', titleF)
@@ -104,7 +110,21 @@ class excelSheet():
 		worksheet.write(self.wireCountCell, wireSDInfo['total'], centerF)
 		worksheet.write(self.xmlFilePathCell, 'XML: ' + xmlFilePath)
 
-		#
+		# Get pseudo Reference 
+		pseudo = refInfo['pseudo']
+		if pseudo:
+			pseudoRefC = re.findall("[a-zA-Z]+", self.pseudoTitleCell)[0]
+			realRefC = re.findall("[a-zA-Z]+", self.realTitleCell)[0]
+			worksheet.set_column(pseudoRefC + ':' + pseudoRefC, 20)
+			worksheet.set_column(realRefC + ':' + realRefC, 20)
+			worksheet.write(self.pseudoTitleCell, 'Pseudo Reference (R)', titleF)
+			worksheet.write(self.realTitleCell, 'Reference Number (R)', titleF)
+			pseudoRefRowN = int(self.pseudoTitleCell[len(pseudoRefC):]) + 1
+			for pseudoRef in pseudo:
+				worksheet.write(pseudoRefC + str(pseudoRefRowN) , pseudoRef, pseudoRefLetter)
+				worksheet.write(realRefC + str(pseudoRefRowN), None, unlocked)
+				pseudoRefRowN = pseudoRefRowN + 1
+
 		refGapSet = set(refGap)
 		### write rows
 		lastRefRow = int(self.titleRow) + int(refNumList[-1])
@@ -339,13 +359,43 @@ class excelSheet():
 					allCopy[copy] = [row]
 
 			row = str(int(row) + 1)
+
+		if worksheet[self.pseudoTitleCell].value:
+			missingRealRefNum = []
+			pseudo2Real = {}
+			exist = True
+			pseudoRefC = re.findall("[a-zA-Z]+", self.pseudoTitleCell)[0]
+			realRefC = re.findall("[a-zA-Z]+", self.realTitleCell)[0]
+			pseudoRefRowN = int(self.pseudoTitleCell[len(pseudoRefC):]) + 1
+
+			while exist:
+				try:
+					pseudoRef = worksheet[pseudoRefC + str(pseudoRefRowN)].value
+					realRef = str(worksheet[realRefC + str(pseudoRefRowN)].value)
+					if not pseudoRef or not realRef:
+						exist = False
+				except IndexError:
+					exist = False
+
+				if exist:
+					if not realRef or realRef == 'None':
+						missingRealRefNum.append(realRefC + str(pseudoRefRowN))
+					else:
+						pseudo2Real[pseudoRef] = realRef
+				pseudoRefRowN = pseudoRefRowN + 1
+
+			excelReference['pseudo2Real'] = pseudo2Real
+
+		print(pseudo2Real)
+		print(missingRealRefNum)
+
 		errorText = ""
-		if missingRef or missingCopy or missingType or missingDep or repeat or wrongSeqRow:
-			errorText = writeErrorMessage(missingRef, missingCopy, missingType, missingDep, repeat, wrongSeqRow)
+		if missingRef or missingCopy or missingType or missingDep or repeat or wrongSeqRow or missingRealRefNum:
+			errorText = writeErrorMessage(missingRef, missingCopy, missingType, missingDep, repeat, wrongSeqRow, missingRealRefNum)###############################
 			
 		return xmlFilePath, excelReference, errorText
 
-def writeErrorMessage(missingRefRow, missingCopyRow, missingTypeRow, missingDepRow, repeatRefRow, wrongSequenceRow):
+def writeErrorMessage(missingRefRow, missingCopyRow, missingTypeRow, missingDepRow, repeatRefRow, wrongSequenceRow, missingRealRef):
 	message = ""
 	if missingRefRow:
 		message = message + "\nMissing Reference Number at Row: "
@@ -383,6 +433,12 @@ def writeErrorMessage(missingRefRow, missingCopyRow, missingTypeRow, missingDepR
 		message = message + "\nSequence Incorrect at Row: "
 		for i in range(0, len(wrongSequenceRow) - 1):
 			message = message + wrongSequenceRow[i] + ", "
-		message = message + wrongSequenceRow[-1] + "\n"  
+		message = message + wrongSequenceRow[-1] + "\n"
+
+	if missingRealRef:
+		message = message + "\nMissing entry at Cell: "
+		for i in range(0, len(missingRealRef) - 1):
+			message = message + missingRealRef[i] + ", "
+		message = message + missingRealRef[-1] + "\n"
 
 	return message

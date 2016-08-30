@@ -6,7 +6,7 @@ from tkinter import messagebox
 from os.path import isfile
 from util import splitFileFolderAndName
 from excelSheetV2 import excelSheet
-import xmlTool
+from xmlTool import xmlTool
 
 class first(Frame):
 	"""The first interface which has options to read a XML file or an Excel spread sheet.
