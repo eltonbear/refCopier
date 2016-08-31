@@ -391,7 +391,7 @@ class excelSheet():
 
 		errorText = ""
 		if missingRef or missingCopy or missingType or missingDep or repeat or wrongSeqRow or missingRealRefNum:
-			errorText = writeErrorMessage(missingRef, missingCopy, missingType, missingDep, repeat, wrongSeqRow, missingRealRefNum)###############################
+			errorText = writeErrorMessage(missingRef, missingCopy, missingType, missingDep, repeat, wrongSeqRow, missingRealRefNum)
 			
 		return xmlFilePath, excelReference, errorText
 
@@ -436,7 +436,7 @@ def writeErrorMessage(missingRefRow, missingCopyRow, missingTypeRow, missingDepR
 		message = message + wrongSequenceRow[-1] + "\n"
 
 	if missingRealRef:
-		message = message + "\nMissing entry at Cell: "
+		message = message + "\nMissing Reference Number at Cell: "
 		for i in range(0, len(missingRealRef) - 1):
 			message = message + missingRealRef[i] + ", "
 		message = message + missingRealRef[-1] + "\n"

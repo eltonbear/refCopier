@@ -195,7 +195,7 @@ class xmlTool():
 				XML file path.
 			referenceDictDFromExc: dictionary
 				A collection of data from an Excel spreadsheet.
-				referenceDictDFromExc data structure --> {'og': {'refNum':[type, dependon]}, 'add': {'refNum': [copyNum, type]}, 'newRefName': ['refNum']}
+				referenceDictDFromExc data structure --> {'og': {'refNum':[type, dependon]}, 'add': {'refNum': [copyNum, type]}, 'newRefName': ['refNum'], 'pseudo2Real': {'A': '1', 'B': '2'}}
 
 
 			Returns
@@ -229,33 +229,57 @@ class xmlTool():
 		for r in referenceE: 
 			# Get name of the reference
 			ref = r.find('Name').text
-			# Get number in string from name
-			# refNumber = re.findall('\d+', ref)[0]
-			refNumber = ref[cls.prefixLen:]
-			# Get type and dependency from Excel inputs
-			typ, dep = referenceDictDFromExc['og'][refNumber]
-			# If types dont match, modify type
-			if r.find('Type').text != typ:
-				r.find('Type').text = typ
-			if dep:
-				# If there is no dependon originally, create and dependon element in the reference
-				if r.find('Dependon') == None:
-					newDepEle = Element('Dependon')
-					newDepEle.text = cls.prefix + dep
-					r.insert(2, newDepEle)
-					indent(newDepEle, 2)
-				# If dependon values dont match, modify the original value
-				elif r.find('Dependon').text != cls.prefix + dep:
-					r.find('Dependon').text = cls.prefix + dep
+			if ref.isalpha():
+				# Remove pseudo reference elements when the name contains only letters
+				root.remove(r)
 			else:
-				# If there is depenon originally, but not in Excel sheet, remove dependon element in XML
-				if r.find('Dependon') != None:
-					r.remove(r.find('Dependon'))
-
+				# Get number in string from name
+				refNumber = ref[cls.prefixLen:]
+				# Get type and dependency from Excel inputs
+				typ, dep = referenceDictDFromExc['og'][refNumber]
+				# If types dont match, modify type
+				if r.find('Type').text != typ:
+					r.find('Type').text = typ
+				if dep:
+					# If there is no dependon originally, create and dependon element in the reference
+					if r.find('Dependon') == None:
+						newDepEle = Element('Dependon')
+						newDepEle.text = cls.prefix + dep
+						r.insert(2, newDepEle)
+						indent(newDepEle, 2)
+					# If dependon values dont match, modify the original value
+					elif r.find('Dependon').text != cls.prefix + dep:
+						r.find('Dependon').text = cls.prefix + dep
+				else:
+					# If there is depenon originally, but not in Excel sheet, remove dependon element in XML
+					if r.find('Dependon') != None:
+						r.remove(r.find('Dependon'))
 
 		# Read wire source and destination information, see function readWieSDInfo
 		wireSDInfo = xmlTool.readWireSDInfo(wireE)
-		# Get a dictionary references to add, addRefDict --> {'str(refNum)': ['copyNum', type]}
+		print(wireSDInfo)
+		# Get converion information dictionary --> {'A': '1', 'B': '2'}
+		pseudoTrans = referenceDictDFromExc['pseudo2Real']
+		# Get a list of pseudo letters
+		letters = pseudoTrans.keys()
+		# Translate pseudo reference name to real reference name in wire's source or destination
+		for letter in letters:
+			if letter in wireSDInfo:
+				pseudoRefConversion(wireE, referenceDictDFromExc['pseudo2Real'], wireSDInfo[letter], cls.prefix)
+				translation = pseudoTrans[letter]\
+				# Modify wire src and des information after pseudo reference name is translated
+				print(letter, translation)
+				if translation in wireSDInfo:
+					wireSDInfo[translation]['s'] = wireSDInfo[translation]['s'] + wireSDInfo[letter]['s']
+					wireSDInfo[translation]['d'] = wireSDInfo[translation]['d'] + wireSDInfo[letter]['d']
+				else:
+					wireSDInfo[translation] = {'s': wireSDInfo[letter]['s'], 'd': wireSDInfo[letter]['d']}
+				# Delete wire src and des indice dictionary for pseudo ref
+				del wireSDInfo[letter]
+
+		print('\n')
+		print(wireSDInfo)
+		# Get a dictionary references to add, addRefDict --> {'refNum': ['copyNum', type]}
 		addRefDict = referenceDictDFromExc['add']
 		# referenceDictDFromExc['newRefName'] --> ['ref num in str']
 		for nName in referenceDictDFromExc['newRefName']:
@@ -308,6 +332,25 @@ def writeARefCopy(oldName, newName, typ, prefix):
 	indent(newRefEle, 1)
 	# Return the reference(address) of the new reference element
 	return newRefEle
+
+def pseudoRefConversion(wireElements, conversion, wireSDIndex, prefix):
+	for index in wireSDIndex['s']:
+		# Find destination element in a wire element 
+		srcBond = wireElements[index].findall('Bond')[0].find('Refsys')
+		# Get pseudo letter
+		srcLetter = srcBond.text[len(prefix):]
+		# Change pseudo ref name to real ref name
+		if srcLetter in conversion:
+			srcBond.text = prefix + conversion[srcLetter]
+
+	for index in wireSDIndex['d']:
+		# Find destination element in a wire element 
+		desBond = wireElements[index].findall('Bond')[1].find('Refsys')
+		# Get pseudo letter
+		desLetter = desBond.text[len(prefix):]
+		# Change pseudo ref name to real ref name
+		if desLetter in conversion:
+			desBond.text = prefix + conversion[desLetter]
 
 def modifyWireDesRef(oldDes, newDes, wireElements, wireIndex, prefix): 
 	"""Modify wire destinations.
