@@ -110,8 +110,15 @@ class excelSheet():
 		worksheet.write(self.wireCountCell, wireSDInfo['total'], centerF)
 		worksheet.write(self.xmlFilePathCell, 'XML: ' + xmlFilePath)
 
+		### write rows
+		lastRefRow = int(self.titleRow) + int(refNumList[-1])
+		fstAppendRow = str(int(lastRefRow) + 1)
+		lastAppendRow = str(int(lastRefRow) + len(refNumList) - numOfGap)
+		lastHiddenRefRow = str(len(refNumList))
+
 		# Get pseudo Reference 
 		pseudo = refInfo['pseudo']
+		print(pseudo)
 		if pseudo:
 			pseudoRefC = re.findall("[a-zA-Z]+", self.pseudoTitleCell)[0]
 			realRefC = re.findall("[a-zA-Z]+", self.realTitleCell)[0]
@@ -119,20 +126,20 @@ class excelSheet():
 			worksheet.set_column(realRefC + ':' + realRefC, 20)
 			worksheet.write(self.pseudoTitleCell, 'Pseudo Reference (R)', titleF)
 			worksheet.write(self.realTitleCell, 'Reference Number (R)', titleF)
-			pseudoRefRowN = int(self.pseudoTitleCell[len(pseudoRefC):]) + 1
-			for pseudoRef in pseudo:
-				worksheet.write(pseudoRefC + str(pseudoRefRowN) , pseudoRef, pseudoRefLetter)
-				worksheet.write(realRefC + str(pseudoRefRowN), None, unlocked)
-				pseudoRefRowN = pseudoRefRowN + 1
+			pseudoRefRowS = str(int(self.pseudoTitleCell[len(pseudoRefC):]) + 1)
+			sortedPseudo = sorted(pseudo)
+			for pseudoRef in sortedPseudo:
+				print(pseudoRef)
+				worksheet.write(pseudoRefC + pseudoRefRowS , pseudoRef, pseudoRefLetter)
+				worksheet.write(realRefC + pseudoRefRowS, None, unlocked)
+				listFormula = 'COUNTIF($' + self.hiddenRefC + '$1' + ':$' + self.hiddenRefC + '$' + lastHiddenRefRow + ',' + realRefC + pseudoRefRowS + ')=1'
+				worksheet.data_validation(realRefC + pseudoRefRowS, {'validate': 'custom', 'value': listFormula, 'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'})
+				pseudoRefRowS = str(int(pseudoRefRowS) + 1)
 
 		refGapSet = set(refGap)
-		### write rows
-		lastRefRow = int(self.titleRow) + int(refNumList[-1])
-		fstAppendRow = str(int(lastRefRow) + 1)
-		lastAppendRow = str(int(lastRefRow) + len(refNumList) - numOfGap)
-		lastHiddenRefRow = str(len(refNumList))
 		refNumber = 1	
 		refListIndex = 0
+
 		for rowN in range(int(self.firstInputRow), int(lastAppendRow) + 1):
 			rowS = str(rowN)
 			if rowN < int(fstAppendRow):
@@ -164,7 +171,8 @@ class excelSheet():
 					worksheet.write(self.wireSCountC + rowS, len(wireSDInfo[str(refNumber)]['s']), centerF)
 					worksheet.write(self.wireDCountC + rowS, len(wireSDInfo[str(refNumber)]['d']), centerF)
 					### data validation for dep
-					worksheet.data_validation(self.depC + rowS, {'validate': 'list', 'source': refNumList,'dropdown': False,'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'})
+					listF = 'COUNTIF($' + self.hiddenRefC + '$1' + ':$' + self.hiddenRefC + '$' + lastHiddenRefRow + ',' + self.depC + rowS + ')=1'
+					worksheet.data_validation(self.depC + rowS, {'validate': 'custom', 'value': listF, 'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'})
 					### formulas for Wire new D Count cell
 					wireNewDFormula = '=IF(COUNTIF(' + self.copyC + self.firstInputRow + ':' + self.copyC + lastAppendRow + ', ' + str(refNumber) + ') > 0, 0, ' + str(len(wireSDInfo[str(refNumber)]['d'])) + ')'
 					worksheet.write_formula(self.wireNewDcountC + rowS, wireNewDFormula, centerHiddenF)

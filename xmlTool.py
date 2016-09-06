@@ -44,11 +44,12 @@ class xmlTool():
 		if parseFailure or not referenceE or not wireE:
 			return {}, {}
 
+		isLetter = False
 		refName = [] 				 # A list of reference numbers in string
 		refNameGap = [] 			 # A list of missing reference numbers in string
 		typ = [] 					 # A list of refernece types in string
 		dependon = [] 				 # A list of reference number that references depend on in string
-		pseudoRef = []				 # A list of pseudo reference name
+		pseudoRef = set()  			 # A set of pseudo reference name
 		numOfRef = len(referenceE)	 # The number of reference elements
 
 		# Obtain wire source and destination information and total count 
@@ -60,7 +61,11 @@ class xmlTool():
 			name = referenceE[i].find('Name').text
 			if name.isalpha():
 				# Append to pseudo reference list if name only contains letters
-				pseudoRef.append(name[cls.prefixLen:])
+				pseudoRef.add(name[cls.prefixLen:])
+				if not isLetter:
+					isLetter = True
+			elif isLetter:
+				return {}, {0:0}
 			else:
 				# Get reference numbers in string without the prefix('R')
 				# numberS = re.findall('\d+', name)[0]
@@ -91,7 +96,6 @@ class xmlTool():
 
 		# Compress references information into a dictionary
 		referenceInfo = {'name': refName,'type': typ, 'dependon': dependon, 'gap': refNameGap, 'repeats': checkRepeats(refName), 'pseudo': pseudoRef}
-		print(pseudoRef)
 		return referenceInfo, wireSDCount
 
 	@classmethod

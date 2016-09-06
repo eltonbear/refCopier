@@ -336,8 +336,10 @@ def readXMLAndStartSheet(filePath):
 	# Read xml and get all references' names, missing references' names, types, dependon, and  wire count information
 	refInfo, wireInfo = xmlTool.readXML(filePath)
 	# If reference name list is None or wireInfo dictionary is None, file format is incorrect
-	if not refInfo or not wireInfo:
+	if not refInfo and not wireInfo:
 		return ("", "File: " + fileName + " - format incorrect!")
+	if not refInfo and 0 in wireInfo:
+		return ("", 'Pseudo references need to be placed in the end')
 	# If there is repeating reference name
 	if refInfo['repeats']: 
 		# Generate a text of information of xml data       
