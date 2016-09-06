@@ -360,8 +360,8 @@ class excelSheet():
 
 			row = str(int(row) + 1)
 
+		missingRealRefNum = []
 		if worksheet[self.pseudoTitleCell].value:
-			missingRealRefNum = []
 			pseudo2Real = {}
 			exist = True
 			pseudoRefC = re.findall("[a-zA-Z]+", self.pseudoTitleCell)[0]
@@ -385,9 +385,6 @@ class excelSheet():
 				pseudoRefRowN = pseudoRefRowN + 1
 
 			excelReference['pseudo2Real'] = pseudo2Real
-
-		print(pseudo2Real)
-		print(missingRealRefNum)
 
 		errorText = ""
 		if missingRef or missingCopy or missingType or missingDep or repeat or wrongSeqRow or missingRealRefNum:
