@@ -18,15 +18,18 @@ class excelSheet():
 		self.wireNewDcountC = 'H'
 		self.hiddenRefC='U'
 		self.vbaButtonC = 'J'
+		self.pseudoRefC = 'L'
+		self.realRefC = 'M'
+		self.pseudoCountC = 'N'
+		self.wirePseudoCountC = 'O'
 		### Set rows
 		self.titleRow = '1'
 		self.firstInputRow = str(int(self.titleRow) + 1)
+		self.pseudoTitleRow = '6'
 		### Set cell address
 		self.xmlFilePathCell ='M1'
 		self.wireTagCell = 'M3'
 		self.wireCountCell = 'M4'
-		self.pseudoTitleCell = 'M6'
-		self.realTitleCell = 'N6'
 		self.lastAppendRowCell = 'I4'
 		self.appendRowCountCell = 'I3' 
 		self.lastRefRowBeforeMacroCell = 'I2'
@@ -81,6 +84,7 @@ class excelSheet():
 		appendBlockedF = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#92cddc', 'locked': 1, 'hidden': 1, 'border': 1, 'border_color': '#b2b2b2'})
 		appendHiddenZeroBlockedF = workbook.add_format({'bg_color': '#92cddc', 'font_color': '#92cddc', 'locked': 1, 'hidden': 1, 'border': 1, 'border_color': '#b2b2b2'})
 		pseudoRefLetter = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#c6efce', 'font_color': '#006100'})
+		pseudoCounts = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#c6efce'})
 
 
 		### activate protection with password "elton"
@@ -117,23 +121,29 @@ class excelSheet():
 		lastHiddenRefRow = str(len(refNumList))
 
 		# Get pseudo Reference 
-		pseudo = refInfo['pseudo']
+		pseudo = refInfo['pseudo'] # A dictionary
 		print(pseudo)
 		if pseudo:
-			pseudoRefC = re.findall("[a-zA-Z]+", self.pseudoTitleCell)[0]
-			realRefC = re.findall("[a-zA-Z]+", self.realTitleCell)[0]
-			worksheet.set_column(pseudoRefC + ':' + pseudoRefC, 20)
-			worksheet.set_column(realRefC + ':' + realRefC, 20)
-			worksheet.write(self.pseudoTitleCell, 'Pseudo Reference (R)', titleF)
-			worksheet.write(self.realTitleCell, 'Reference Number (R)', titleF)
-			pseudoRefRowS = str(int(self.pseudoTitleCell[len(pseudoRefC):]) + 1)
-			sortedPseudo = sorted(pseudo)
+			worksheet.set_column(self.pseudoRefC + ':' + self.pseudoRefC, 20)
+			worksheet.set_column(self.realRefC + ':' + self.realRefC, 20)
+			worksheet.set_column(self.pseudoCountC + ':' + self.pseudoCountC, 6)
+			worksheet.set_column(self.wirePseudoCountC + ':' + self.wirePseudoCountC, 11)
+
+			worksheet.write(self.pseudoRefC + self.pseudoTitleRow, 'Pseudo Reference (R)', titleF)
+			worksheet.write(self.realRefC + self.pseudoTitleRow, 'Reference Number (R)', titleF)
+			worksheet.write(self.pseudoCountC + self.pseudoTitleRow, 'Count', titleF)
+			worksheet.write(self.wirePseudoCountC + self.pseudoTitleRow, 'Wire Count', titleF)
+
+			pseudoRefRowS = str(int(self.pseudoTitleRow) + 1)
+			sortedPseudo = sorted(pseudo.keys())
 			for pseudoRef in sortedPseudo:
 				print(pseudoRef)
-				worksheet.write(pseudoRefC + pseudoRefRowS , pseudoRef, pseudoRefLetter)
-				worksheet.write(realRefC + pseudoRefRowS, None, unlocked)
-				listFormula = 'COUNTIF($' + self.hiddenRefC + '$1' + ':$' + self.hiddenRefC + '$' + lastHiddenRefRow + ',' + realRefC + pseudoRefRowS + ')=1'
-				worksheet.data_validation(realRefC + pseudoRefRowS, {'validate': 'custom', 'value': listFormula, 'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'})
+				worksheet.write(self.pseudoRefC + pseudoRefRowS , pseudoRef, pseudoRefLetter)
+				worksheet.write(self.realRefC + pseudoRefRowS, None, unlocked)
+				worksheet.write(self.pseudoCountC + pseudoRefRowS , pseudo[pseudoRef], pseudoCounts)
+				worksheet.write(self.wirePseudoCountC + pseudoRefRowS, len(set(wireSDInfo[pseudoRef]['s'] + wireSDInfo[pseudoRef]['d'])), pseudoCounts)
+				listFormula = 'COUNTIF($' + self.hiddenRefC + '$1' + ':$' + self.hiddenRefC + '$' + lastHiddenRefRow + ',' + self.realRefC + pseudoRefRowS + ')=1'
+				worksheet.data_validation(self.realRefC + pseudoRefRowS, {'validate': 'custom', 'value': listFormula, 'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'})
 				pseudoRefRowS = str(int(pseudoRefRowS) + 1)
 
 		refGapSet = set(refGap)
@@ -369,17 +379,15 @@ class excelSheet():
 			row = str(int(row) + 1)
 
 		missingRealRefNum = []
-		if worksheet[self.pseudoTitleCell].value:
+		if worksheet[self.pseudoRefC + self.pseudoTitleRow].value:
 			pseudo2Real = {}
 			exist = True
-			pseudoRefC = re.findall("[a-zA-Z]+", self.pseudoTitleCell)[0]
-			realRefC = re.findall("[a-zA-Z]+", self.realTitleCell)[0]
-			pseudoRefRowN = int(self.pseudoTitleCell[len(pseudoRefC):]) + 1
+			pseudoRefRow = str(int(self.pseudoTitleRow) + 1)
 
 			while exist:
 				try:
-					pseudoRef = worksheet[pseudoRefC + str(pseudoRefRowN)].value
-					realRef = str(worksheet[realRefC + str(pseudoRefRowN)].value)
+					pseudoRef = worksheet[self.pseudoRefC + pseudoRefRow].value
+					realRef = str(worksheet[self.realRefC + pseudoRefRow].value)
 					if not pseudoRef or not realRef:
 						exist = False
 				except IndexError:
@@ -387,10 +395,10 @@ class excelSheet():
 
 				if exist:
 					if not realRef or realRef == 'None':
-						missingRealRefNum.append(realRefC + str(pseudoRefRowN))
+						missingRealRefNum.append(self.realRefC + pseudoRefRow)
 					else:
 						pseudo2Real[pseudoRef] = realRef
-				pseudoRefRowN = pseudoRefRowN + 1
+				pseudoRefRow = str(int(pseudoRefRow) + 1)
 
 			excelReference['pseudo2Real'] = pseudo2Real
 

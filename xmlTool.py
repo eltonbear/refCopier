@@ -49,7 +49,7 @@ class xmlTool():
 		refNameGap = [] 			 # A list of missing reference numbers in string
 		typ = [] 					 # A list of refernece types in string
 		dependon = [] 				 # A list of reference number that references depend on in string
-		pseudoRef = set()  			 # A set of pseudo reference name
+		pseudoRef = {}  			 # A dictionary of pseudo reference name with its counts
 		numOfRef = len(referenceE)	 # The number of reference elements
 
 		# Obtain wire source and destination information and total count 
@@ -60,8 +60,12 @@ class xmlTool():
 			# Get reference name
 			name = referenceE[i].find('Name').text
 			if name.isalpha():
-				# Append to pseudo reference list if name only contains letters
-				pseudoRef.add(name[cls.prefixLen:])
+				# Add to dictionary if name only contains letters
+				letter = name[cls.prefixLen:]
+				if letter in pseudoRef:
+					pseudoRef[letter] = pseudoRef[letter] + 1 
+				else:
+					pseudoRef[letter] = 1
 				if not isLetter:
 					isLetter = True
 			elif isLetter:
@@ -262,24 +266,26 @@ class xmlTool():
 		# Read wire source and destination information, see function readWieSDInfo
 		wireSDInfo = xmlTool.readWireSDInfo(wireE)
 		print(wireSDInfo)
-		# Get converion information dictionary --> {'A': '1', 'B': '2'}
-		pseudoTrans = referenceDictDFromExc['pseudo2Real']
-		# Get a list of pseudo letters
-		letters = pseudoTrans.keys()
-		# Translate pseudo reference name to real reference name in wire's source or destination
-		for letter in letters:
-			if letter in wireSDInfo:
-				pseudoRefConversion(wireE, referenceDictDFromExc['pseudo2Real'], wireSDInfo[letter], cls.prefix)
-				translation = pseudoTrans[letter]\
-				# Modify wire src and des information after pseudo reference name is translated
-				print(letter, translation)
-				if translation in wireSDInfo:
-					wireSDInfo[translation]['s'] = wireSDInfo[translation]['s'] + wireSDInfo[letter]['s']
-					wireSDInfo[translation]['d'] = wireSDInfo[translation]['d'] + wireSDInfo[letter]['d']
-				else:
-					wireSDInfo[translation] = {'s': wireSDInfo[letter]['s'], 'd': wireSDInfo[letter]['d']}
-				# Delete wire src and des indice dictionary for pseudo ref
-				del wireSDInfo[letter]
+		# If there is pseudo references 
+		if 'pseudo2Real' in referenceDictDFromExc:
+			# Get converion information dictionary --> {'A': '1', 'B': '2'}
+			pseudoTrans = referenceDictDFromExc['pseudo2Real']
+			# Get a list of pseudo letters
+			letters = pseudoTrans.keys()
+			# Translate pseudo reference name to real reference name in wire's source or destination
+			for letter in letters:
+				if letter in wireSDInfo:
+					pseudoRefConversion(wireE, referenceDictDFromExc['pseudo2Real'], wireSDInfo[letter], cls.prefix)
+					translation = pseudoTrans[letter]
+					# Modify wire src and des information after pseudo reference name is translated
+					print(letter, translation)
+					if translation in wireSDInfo:
+						wireSDInfo[translation]['s'] = wireSDInfo[translation]['s'] + wireSDInfo[letter]['s']
+						wireSDInfo[translation]['d'] = wireSDInfo[translation]['d'] + wireSDInfo[letter]['d']
+					else:
+						wireSDInfo[translation] = {'s': wireSDInfo[letter]['s'], 'd': wireSDInfo[letter]['d']}
+					# Delete wire src and des indice dictionary for pseudo ref
+					del wireSDInfo[letter]
 
 		print('\n')
 		print(wireSDInfo)
