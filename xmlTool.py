@@ -225,6 +225,9 @@ class xmlTool():
 		except ET.ParseError: 
 			message = "File: " + xmlFileName + " - format incorrect!"
 			return message
+		except FileNotFoundError:
+			message = "File Not Found! File Path: " + xmlFilePath
+			return message
 		# Create ElementTree object and find its root (highest node)
 		root = tree.getroot() 
 		# Create lists of reference elements and wire elements
