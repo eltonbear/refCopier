@@ -268,7 +268,6 @@ class xmlTool():
 
 		# Read wire source and destination information, see function readWieSDInfo
 		wireSDInfo = xmlTool.readWireSDInfo(wireE)
-		print(wireSDInfo)
 		# If there is pseudo references 
 		if 'pseudo2Real' in referenceDictDFromExc:
 			# Get converion information dictionary --> {'A': '1', 'B': '2'}
@@ -278,20 +277,21 @@ class xmlTool():
 			# Translate pseudo reference name to real reference name in wire's source or destination
 			for letter in letters:
 				if letter in wireSDInfo:
-					pseudoRefConversion(wireE, referenceDictDFromExc['pseudo2Real'], wireSDInfo[letter], cls.prefix)
 					translation = pseudoTrans[letter]
-					# Modify wire src and des information after pseudo reference name is translated
-					print(letter, translation)
+					# Translate reference name
+					wirePseudoSrcIndex = wireSDInfo[letter]['s']
+					wirePseudoDesIndex = wireSDInfo[letter]['d']
+					if wirePseudoSrcIndex:
+						modifyWireRef(letter, translation, wireE, wirePseudoSrcIndex, cls.prefix, 0)
+					if wirePseudoDesIndex:
+						modifyWireRef(letter, translation, wireE, wirePseudoDesIndex, cls.prefix, 1)
+					# Modify wire source and destination index
 					if translation in wireSDInfo:
-						wireSDInfo[translation]['s'] = wireSDInfo[translation]['s'] + wireSDInfo[letter]['s']
-						wireSDInfo[translation]['d'] = wireSDInfo[translation]['d'] + wireSDInfo[letter]['d']
+						wireSDInfo[translation]['s'] = wireSDInfo[translation]['s'] + wirePseudoSrcIndex
+						wireSDInfo[translation]['d'] = wireSDInfo[translation]['d'] + wirePseudoDesIndex
 					else:
-						wireSDInfo[translation] = {'s': wireSDInfo[letter]['s'], 'd': wireSDInfo[letter]['d']}
-					# Delete wire src and des indice dictionary for pseudo ref
-					del wireSDInfo[letter]
+						wireSDInfo[translation] = {'s': wirePseudoSrcIndex, 'd': wirePseudoDesIndex}
 
-		print('\n')
-		print(wireSDInfo)
 		# Get a dictionary references to add, addRefDict --> {'refNum': ['copyNum', type]}
 		addRefDict = referenceDictDFromExc['add']
 		# referenceDictDFromExc['newRefName'] --> ['ref num in str']
@@ -304,7 +304,7 @@ class xmlTool():
 			root.insert(int(nName)-1, copy)
 			# Change wire destination
 			if refNameToCopy in wireSDInfo:
-				modifyWireDesRef(refNameToCopy, nName, wireE, wireSDInfo[refNameToCopy]['d'], cls.prefix)
+				modifyWireRef(refNameToCopy, nName, wireE, wireSDInfo[refNameToCopy]['d'], cls.prefix, 1)
 		# Create new XML file path and write data into it
 		newXmlFilePath = xmlFolderPath + "/" + xmlFileName + "_new.xml"
 		tree.write(newXmlFilePath)
@@ -346,48 +346,31 @@ def writeARefCopy(oldName, newName, typ, prefix):
 	# Return the reference(address) of the new reference element
 	return newRefEle
 
-def pseudoRefConversion(wireElements, conversion, wireSDIndex, prefix):
-	for index in wireSDIndex['s']:
-		# Find destination element in a wire element 
-		srcBond = wireElements[index].findall('Bond')[0].find('Refsys')
-		# Get pseudo letter
-		srcLetter = srcBond.text[len(prefix):]
-		# Change pseudo ref name to real ref name
-		if srcLetter in conversion:
-			srcBond.text = prefix + conversion[srcLetter]
-
-	for index in wireSDIndex['d']:
-		# Find destination element in a wire element 
-		desBond = wireElements[index].findall('Bond')[1].find('Refsys')
-		# Get pseudo letter
-		desLetter = desBond.text[len(prefix):]
-		# Change pseudo ref name to real ref name
-		if desLetter in conversion:
-			desBond.text = prefix + conversion[desLetter]
-
-def modifyWireDesRef(oldDes, newDes, wireElements, wireIndex, prefix): 
-	"""Modify wire destinations.
+def modifyWireRef(old, new, wireElements, wireIndex, prefix, srcOrDes): 
+	"""Modify wire source or destination.
 
 		Parameters
 		----------
-		oldDes: string
-			The original destination (reference number in string). 
-		newDes : string
-			The new destination (reference number in string). 
+		old: string
+			The original src or destination (reference number in string). 
+		new: string
+			The new src ordestination (reference number in string). 
 		wireElements: Element
 			Wire elements in the XML file
 		wireIndex: list
 			A list of wire indices of wire elements whose destinations need to be modified.
 		prefix: string
 			String before number in reference name.
+		srcOrDes: int
+			0: Source, 1: Destination
 	"""
 
 	for index in wireIndex:
 		# Find destination element in a wire element 
-		desBond = wireElements[index].findall('Bond')[1].find('Refsys')
+		bond = wireElements[index].findall('Bond')[srcOrDes].find('Refsys')
 		# Change the name from oldDes to newDes
-		if desBond.text == prefix + oldDes:
-			desBond.text = prefix + newDes
+		if bond.text == prefix + old:
+			bond.text = prefix + new
 
 def checkRepeats(refNameList):
 		"""Check for any repeating references.
