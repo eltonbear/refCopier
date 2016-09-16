@@ -21,7 +21,9 @@ class excelSheet():
 		self.pseudoRefC = 'L'
 		self.realRefC = 'M'
 		self.pseudoCountC = 'N'
-		self.wirePseudoCountC = 'O'
+		#self.wirePseudoCountC = 'O'
+		self.wirePseudoCountSC = 'O'
+		self.wirePseudoCountDC = 'P'
 		### Set rows
 		self.titleRow = '1'
 		self.firstInputRow = str(int(self.titleRow) + 1)
@@ -30,10 +32,11 @@ class excelSheet():
 		self.xmlFilePathCell ='M1'
 		self.wireTagCell = 'M3'
 		self.wireCountCell = 'M4'
-		self.lastAppendRowCell = 'I4'
-		self.appendRowCountCell = 'I3' 
-		self.lastRefRowBeforeMacroCell = 'I2'
-		self.hiddenLastExistingRefRowCell = 'I1'
+		self.hiddenRowsC = 'I'
+		self.lastAppendRowCell = self.hiddenRowsC + '4'
+		self.appendRowCountCell = self.hiddenRowsC + '3' 
+		self.lastRefRowBeforeMacroCell = self.hiddenRowsC + '2'
+		self.hiddenLastExistingRefRowCell = self.hiddenRowsC + '1'
 		### Set rag names
 		self.mTag = 'missing'
 		self.eTag = 'existing'
@@ -92,14 +95,17 @@ class excelSheet():
 
 		### set column width and protection
 		wireTagC = re.findall("[a-zA-Z]+", self.wireTagCell)[0]
-		worksheet.set_column(self.statusC + ':' + self.statusC, 10)
+		worksheet.set_column(self.statusC + ':' + self.statusC, 9)
 		worksheet.set_column(self.refC + ':' + self.refC, 20)
-		worksheet.set_column(self.typeC + ':' + self.typeC, 15)
+		worksheet.set_column(self.typeC + ':' + self.typeC, 14)
 		worksheet.set_column(self.depC + ':' + self.depC, 17)
-		worksheet.set_column(self.wireSCountC + ':' + self.wireSCountC, 13)
-		worksheet.set_column(self.wireDCountC + ':' + self.wireDCountC, 13)
-		worksheet.set_column(self.wireNewDcountC + ':' + self.wireNewDcountC, 17)
+		worksheet.set_column(self.wireSCountC + ':' + self.wireSCountC, 12)
+		worksheet.set_column(self.wireDCountC + ':' + self.wireDCountC, 12)
+		worksheet.set_column(self.wireNewDcountC + ':' + self.wireNewDcountC, 16)
+		worksheet.set_column(self.hiddenRowsC + ':' + self.hiddenRowsC, 5)
 		worksheet.set_column(wireTagC + ':' + wireTagC, 10)
+		worksheet.set_column(wireTagC + ':' + wireTagC, 10)
+
 
 		### write title
 		worksheet.write(self.statusC + self.titleRow, 'Status', titleF)
@@ -107,9 +113,9 @@ class excelSheet():
 		worksheet.write(self.copyC + self.titleRow, 'Copy (R)', titleF)
 		worksheet.write(self.typeC + self.titleRow, 'Reference Type', titleF)
 		worksheet.write(self.depC + self.titleRow, 'Dependent On (R)', titleF)
-		worksheet.write(self.wireSCountC + self.titleRow, 'Wire S Count', titleF)
-		worksheet.write(self.wireDCountC + self.titleRow, 'Wire D Count', titleF)
-		worksheet.write(self.wireNewDcountC + self.titleRow, 'Wire New D Count', titleF)
+		worksheet.write(self.wireSCountC + self.titleRow, 'Wire Count S', titleF)
+		worksheet.write(self.wireDCountC + self.titleRow, 'Wire Count D', titleF)
+		worksheet.write(self.wireNewDcountC + self.titleRow, 'Wire New Count D', titleF)
 		worksheet.write(self.wireTagCell, "Wire Count", centerF)
 		worksheet.write(self.wireCountCell, wireSDInfo['total'], centerF)
 		worksheet.write(self.xmlFilePathCell, 'XML: ' + xmlFilePath)
@@ -124,26 +130,34 @@ class excelSheet():
 		pseudo = refInfo['pseudo'] # A dictionary
 		print(pseudo)
 		if pseudo:
-			worksheet.set_column(self.pseudoRefC + ':' + self.pseudoRefC, 20)
-			worksheet.set_column(self.realRefC + ':' + self.realRefC, 20)
+			worksheet.set_column(self.pseudoRefC + ':' + self.pseudoRefC, 18)
+			worksheet.set_column(self.realRefC + ':' + self.realRefC, 19)
 			worksheet.set_column(self.pseudoCountC + ':' + self.pseudoCountC, 6)
-			worksheet.set_column(self.wirePseudoCountC + ':' + self.wirePseudoCountC, 11)
+			worksheet.set_column(self.wirePseudoCountSC + ':' + self.wirePseudoCountSC, 12)
+			worksheet.set_column(self.wirePseudoCountDC + ':' + self.wirePseudoCountSC, 12)
 
 			worksheet.write(self.pseudoRefC + self.pseudoTitleRow, 'Pseudo Reference (R)', titleF)
 			worksheet.write(self.realRefC + self.pseudoTitleRow, 'Reference Number (R)', titleF)
 			worksheet.write(self.pseudoCountC + self.pseudoTitleRow, 'Count', titleF)
-			worksheet.write(self.wirePseudoCountC + self.pseudoTitleRow, 'Wire Count', titleF)
+			worksheet.write(self.wirePseudoCountSC + self.pseudoTitleRow, 'Wire Count S', titleF)
+			worksheet.write(self.wirePseudoCountDC + self.pseudoTitleRow, 'Wire Count D', titleF)
 
 			pseudoRefRowS = str(int(self.pseudoTitleRow) + 1)
 			sortedPseudo = sorted(pseudo.keys())
+			numPseudo = len(sortedPseudo)
 			for pseudoRef in sortedPseudo:
 				print(pseudoRef)
 				worksheet.write(self.pseudoRefC + pseudoRefRowS , pseudoRef, pseudoRefLetter)
 				worksheet.write(self.realRefC + pseudoRefRowS, None, unlocked)
 				worksheet.write(self.pseudoCountC + pseudoRefRowS , pseudo[pseudoRef], pseudoCounts)
-				worksheet.write(self.wirePseudoCountC + pseudoRefRowS, len(set(wireSDInfo[pseudoRef]['s'] + wireSDInfo[pseudoRef]['d'])), pseudoCounts)
-				listFormula = 'COUNTIF($' + self.hiddenRefC + '$1' + ':$' + self.hiddenRefC + '$' + lastHiddenRefRow + ',' + self.realRefC + pseudoRefRowS + ')=1'
-				worksheet.data_validation(self.realRefC + pseudoRefRowS, {'validate': 'custom', 'value': listFormula, 'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'})
+				#worksheet.write(self.wirePseudoCountC + pseudoRefRowS, len(set(wireSDInfo[pseudoRef]['s'] + wireSDInfo[pseudoRef]['d'])), pseudoCounts)
+				worksheet.write(self.wirePseudoCountSC + pseudoRefRowS, len(wireSDInfo[pseudoRef]['s']), pseudoCounts)
+				worksheet.write(self.wirePseudoCountDC + pseudoRefRowS, len(wireSDInfo[pseudoRef]['d']), pseudoCounts)
+
+				f1 = 'COUNTIF($' + self.realRefC + '$' + str(int(self.pseudoTitleRow)+1) + ':$' + self.realRefC + '$' + str(int(self.pseudoTitleRow)+numPseudo) + ',' + self.realRefC + pseudoRefRowS + ')=1'
+				f2 = 'COUNTIF($' + self.hiddenRefC + '$1' + ':$' + self.hiddenRefC + '$' + lastHiddenRefRow + ',' + self.realRefC + pseudoRefRowS + ')=1'
+				pseudoRefFormula = '=AND(' + f1 + ', ' + f2 + ')'
+				worksheet.data_validation(self.realRefC + pseudoRefRowS, {'validate': 'custom', 'value': pseudoRefFormula, 'error_title': 'Warning', 'error_message': 'Reference does not exist or Duplicates!', 'error_type': 'stop'})
 				pseudoRefRowS = str(int(pseudoRefRowS) + 1)
 
 		refGapSet = set(refGap)
@@ -178,14 +192,32 @@ class excelSheet():
 					worksheet.write(self.copyC + rowS, self.copyBlockedText, copyBlockedF)
 					worksheet.write(self.typeC + rowS, refInfo['type'][refListIndex],  unlocked)
 					worksheet.write(self.depC + rowS, refInfo['dependon'][refListIndex],  centerF)
-					worksheet.write(self.wireSCountC + rowS, len(wireSDInfo[str(refNumber)]['s']), centerF)
-					worksheet.write(self.wireDCountC + rowS, len(wireSDInfo[str(refNumber)]['d']), centerF)
 					### data validation for dep
 					listF = 'COUNTIF($' + self.hiddenRefC + '$1' + ':$' + self.hiddenRefC + '$' + lastHiddenRefRow + ',' + self.depC + rowS + ')=1'
 					worksheet.data_validation(self.depC + rowS, {'validate': 'custom', 'value': listF, 'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'})
 					### formulas for Wire new D Count cell
-					wireNewDFormula = '=IF(COUNTIF(' + self.copyC + self.firstInputRow + ':' + self.copyC + lastAppendRow + ', ' + str(refNumber) + ') > 0, 0, ' + str(len(wireSDInfo[str(refNumber)]['d'])) + ')'
-					worksheet.write_formula(self.wireNewDcountC + rowS, wireNewDFormula, centerHiddenF)
+					wireRefSCount = len(wireSDInfo[str(refNumber)]['s'])
+					wireRefDCount = len(wireSDInfo[str(refNumber)]['d'])
+					if pseudo:
+						wireCountSFormula = '=IF(COUNTIF(' + self.realRefC +  str(int(self.pseudoTitleRow) + 1) + ':' + self.realRefC + str(int(self.pseudoTitleRow) + numPseudo) + ', ' + str(refNumber) + ') > 0, '\
+											+ str(wireRefSCount) + ' + INDIRECT("' + self.wirePseudoCountSC + '" & MATCH(' + str(refNumber) + ', ' + self.realRefC + str(int(self.pseudoTitleRow) + 1) + ':' + self.realRefC + str(int(self.pseudoTitleRow) + numPseudo)\
+											+ ', 0) + ' + self.pseudoTitleRow +'), ' + str(wireRefSCount) + ')'
+						wireCountDFormula = '=IF(COUNTIF(' + self.realRefC +  str(int(self.pseudoTitleRow) + 1) + ':' + self.realRefC + str(int(self.pseudoTitleRow) + numPseudo) + ', ' + str(refNumber) + ') > 0, '\
+											+ str(wireRefDCount) + ' + INDIRECT("' + self.wirePseudoCountDC + '" & MATCH(' + str(refNumber) + ', ' + self.realRefC + str(int(self.pseudoTitleRow) + 1) + ':' + self.realRefC + str(int(self.pseudoTitleRow) + numPseudo)\
+											+ ', 0) + ' + self.pseudoTitleRow +'), ' + str(wireRefDCount) + ')'
+						wireNewDFormula = '=IF(COUNTIF(' + self.copyC + self.firstInputRow + ':' + self.copyC + lastAppendRow + ', ' + str(refNumber) + ') > 0, 0, '\
+											+ 'IF(COUNTIF(' + self.realRefC +  str(int(self.pseudoTitleRow) + 1) + ':' + self.realRefC + str(int(self.pseudoTitleRow) + numPseudo) + ', ' + str(refNumber) + ') > 0, '\
+											+ str(wireRefDCount) + ' + INDIRECT("' + self.wirePseudoCountDC + '" & MATCH(' + str(refNumber) + ', ' + self.realRefC + str(int(self.pseudoTitleRow) + 1) + ':' + self.realRefC + str(int(self.pseudoTitleRow) + numPseudo)\
+											+ ', 0) + ' + self.pseudoTitleRow +'), ' + str(wireRefDCount) + '))'										
+						worksheet.write_formula(self.wireSCountC + rowS, wireCountSFormula, centerHiddenF)
+						worksheet.write_formula(self.wireDCountC + rowS, wireCountDFormula, centerHiddenF)
+						worksheet.write_formula(self.wireNewDcountC + rowS, wireNewDFormula, centerHiddenF)
+					else:
+						worksheet.write(self.wireSCountC + rowS, wireRefSCount), centerF
+						worksheet.write(self.wireDCountC + rowS, wireRefDCount), centerF
+						wireNewDFormula = '=IF(COUNTIF(' + self.copyC + self.firstInputRow + ':' + self.copyC + lastAppendRow + ', ' + str(refNumber) + ') > 0, 0, ' + str(wireRefDCount) + ')'
+						worksheet.write_formula(self.wireNewDcountC + rowS, wireNewDFormula, centerHiddenF)
+
 					refListIndex += 1
 			else: ### append section
 				if not refGap or rowS == fstAppendRow:
