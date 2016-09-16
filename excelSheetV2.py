@@ -21,7 +21,6 @@ class excelSheet():
 		self.pseudoRefC = 'L'
 		self.realRefC = 'M'
 		self.pseudoCountC = 'N'
-		#self.wirePseudoCountC = 'O'
 		self.wirePseudoCountSC = 'O'
 		self.wirePseudoCountDC = 'P'
 		### Set rows
@@ -89,7 +88,6 @@ class excelSheet():
 		pseudoRefLetter = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#c6efce', 'font_color': '#006100'})
 		pseudoCounts = workbook.add_format({'valign': 'vcenter', 'align': 'center', 'bg_color': '#c6efce'})
 
-
 		### activate protection with password "elton"
 		worksheet.protect('elton')
 
@@ -105,7 +103,6 @@ class excelSheet():
 		worksheet.set_column(self.hiddenRowsC + ':' + self.hiddenRowsC, 5)
 		worksheet.set_column(wireTagC + ':' + wireTagC, 10)
 		worksheet.set_column(wireTagC + ':' + wireTagC, 10)
-
 
 		### write title
 		worksheet.write(self.statusC + self.titleRow, 'Status', titleF)
@@ -146,14 +143,11 @@ class excelSheet():
 			sortedPseudo = sorted(pseudo.keys())
 			numPseudo = len(sortedPseudo)
 			for pseudoRef in sortedPseudo:
-				print(pseudoRef)
 				worksheet.write(self.pseudoRefC + pseudoRefRowS , pseudoRef, pseudoRefLetter)
 				worksheet.write(self.realRefC + pseudoRefRowS, None, unlocked)
 				worksheet.write(self.pseudoCountC + pseudoRefRowS , pseudo[pseudoRef], pseudoCounts)
-				#worksheet.write(self.wirePseudoCountC + pseudoRefRowS, len(set(wireSDInfo[pseudoRef]['s'] + wireSDInfo[pseudoRef]['d'])), pseudoCounts)
 				worksheet.write(self.wirePseudoCountSC + pseudoRefRowS, len(wireSDInfo[pseudoRef]['s']), pseudoCounts)
 				worksheet.write(self.wirePseudoCountDC + pseudoRefRowS, len(wireSDInfo[pseudoRef]['d']), pseudoCounts)
-
 				f1 = 'COUNTIF($' + self.realRefC + '$' + str(int(self.pseudoTitleRow)+1) + ':$' + self.realRefC + '$' + str(int(self.pseudoTitleRow)+numPseudo) + ',' + self.realRefC + pseudoRefRowS + ')=1'
 				f2 = 'COUNTIF($' + self.hiddenRefC + '$1' + ':$' + self.hiddenRefC + '$' + lastHiddenRefRow + ',' + self.realRefC + pseudoRefRowS + ')=1'
 				pseudoRefFormula = '=AND(' + f1 + ', ' + f2 + ')'
