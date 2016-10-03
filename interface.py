@@ -339,7 +339,7 @@ def readXMLAndStartSheet(filePath):
 	if not refInfo and not wireInfo:
 		return ("", "File: " + fileName + " - format incorrect!")
 	if not refInfo and 0 in wireInfo:
-		return ("", 'Pseudo references need to be placed in the end')
+		return ("", wireInfo[0])
 	# If there is repeating reference name
 	if refInfo['repeats']: 
 		# Generate a text of information of xml data       

@@ -125,7 +125,6 @@ class excelSheet():
 
 		# Get pseudo Reference 
 		pseudo = refInfo['pseudo'] # A dictionary
-		print(pseudo)
 		if pseudo:
 			worksheet.set_column(self.pseudoRefC + ':' + self.pseudoRefC, 18)
 			worksheet.set_column(self.realRefC + ':' + self.realRefC, 19)

@@ -51,6 +51,7 @@ class xmlTool():
 		dependon = [] 				 # A list of reference number that references depend on in string
 		pseudoRef = {}  			 # A dictionary of pseudo reference name with its counts
 		numOfRef = len(referenceE)	 # The number of reference elements
+		prevNum = 0
 
 		# Obtain wire source and destination information and total count 
 		wireSDCount = xmlTool.readWireSDInfo(wireE)
@@ -59,6 +60,8 @@ class xmlTool():
 		for i in range(0, numOfRef):
 			# Get reference name
 			name = referenceE[i].find('Name').text
+			if name[0] != cls.prefix:
+				return {}, {0: "Reference [" + name + "] has an incorrect naming format! A reference name consists of a prefix ""R"" + a number or letter."}
 			if name.isalpha():
 				# Add to dictionary if name only contains letters
 				letter = name[cls.prefixLen:]
@@ -69,7 +72,7 @@ class xmlTool():
 				if not isLetter:
 					isLetter = True
 			elif isLetter:
-				return {}, {0:0}
+				return {}, {0: "Pseduo reference must be placed in the end! Check the reference after the last R" + letter}
 			else:
 				# Get reference numbers in string without the prefix('R')
 				# numberS = re.findall('\d+', name)[0]
@@ -85,15 +88,17 @@ class xmlTool():
 				typ.append(referenceE[i].find('Type').text)
 				dependon.append(depS)
 				# Obtain gaps if difference between current reference number and previous is greater than 1
-				if i > 0:
+				try:
 					currNum = int(numberS)
-					if currNum - prevNum > 1:
-						for missing in range(prevNum + 1, currNum):
-							# Append refernce name in string to list
-							refNameGap.append(str(missing))
-					prevNum = currNum
-				else:
-					prevNum = int(numberS)
+				except ValueError:
+					return {}, {0: "Reference [" + name + "] has an incorrect number format! The number needs to be an integer."}
+
+				if currNum - prevNum > 1:
+					for missing in range(prevNum + 1, currNum):
+						# Append refernce name in string to list
+						refNameGap.append(str(missing))
+				prevNum = currNum
+
 				# Add on references has no wires attached to
 				if not numberS in wireSDCount:
 					wireSDCount[numberS] = {'s': [], 'd': []}
