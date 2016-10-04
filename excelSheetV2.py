@@ -206,8 +206,8 @@ class excelSheet():
 						worksheet.write_formula(self.wireDCountC + rowS, wireCountDFormula, centerHiddenF)
 						worksheet.write_formula(self.wireNewDcountC + rowS, wireNewDFormula, centerHiddenF)
 					else:
-						worksheet.write(self.wireSCountC + rowS, wireRefSCount), centerF
-						worksheet.write(self.wireDCountC + rowS, wireRefDCount), centerF
+						worksheet.write(self.wireSCountC + rowS, wireRefSCount, centerF)
+						worksheet.write(self.wireDCountC + rowS, wireRefDCount, centerF)
 						wireNewDFormula = '=IF(COUNTIF(' + self.copyC + self.firstInputRow + ':' + self.copyC + lastAppendRow + ', ' + str(refNumber) + ') > 0, 0, ' + str(wireRefDCount) + ')'
 						worksheet.write_formula(self.wireNewDcountC + rowS, wireNewDFormula, centerHiddenF)
 
