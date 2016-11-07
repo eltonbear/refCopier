@@ -8,6 +8,10 @@ class xmlTool():
 	
 	prefix = 'R'
 	prefixLen = len(prefix)
+	xMin = -295
+	xMax = 1
+	yMin = 0
+	yMax = 275
 
 	@classmethod
 	def readXML(cls, xmlFilePath):
@@ -52,6 +56,7 @@ class xmlTool():
 		pseudoRef = {}  			 # A dictionary of pseudo reference name with its counts
 		numOfRef = len(referenceE)	 # The number of reference elements
 		prevNum = 0
+		pointOutOfBounds = {}
 
 		# Obtain wire source and destination information and total count 
 		wireSDCount = xmlTool.readWireSDInfo(wireE)
@@ -60,6 +65,8 @@ class xmlTool():
 		for i in range(0, numOfRef):
 			# Get reference name
 			name = referenceE[i].find('Name').text
+			points = referenceE[i].findall('Point')
+
 			if name[0] != cls.prefix:
 				return {}, {0: "Reference [" + name + "] has an incorrect naming format! A reference name consists of a prefix ""R"" + a number or letter."}
 			if name.isalpha():
@@ -102,6 +109,13 @@ class xmlTool():
 				# Add on references has no wires attached to
 				if not numberS in wireSDCount:
 					wireSDCount[numberS] = {'s': [], 'd': []}
+
+			# Check if reference is out of bounds
+			for point in points:
+				x = point.find('XPosition').text
+				y = point.find('YPosition').text
+				if float(x) <= cls.xMin or float(x) >= cls.xMax  or float(y) <= cls.yMin  or float(y) >= cls.yMax :
+					return {}, {0: name +" location out of bounds.\n-295 mm < X < 1 mm\n   0 mm < Y < 275 mm"}
 
 		# Compress references information into a dictionary
 		referenceInfo = {'name': refName,'type': typ, 'dependon': dependon, 'gap': refNameGap, 'repeats': checkRepeats(refName), 'pseudo': pseudoRef}
