@@ -60,12 +60,12 @@ class xmlTool():
 
 		# Obtain wire source and destination information and total count 
 		wireSDCount = xmlTool.readWireSDInfo(wireE)
-		
+				
 		# Obtain ref, type, dep, and gaps
 		for i in range(0, numOfRef):
 			# Get reference name
 			name = referenceE[i].find('Name').text
-			points = referenceE[i].findall('Point')
+			pointEs = referenceE[i].findall('Point')
 
 			if name[0] != cls.prefix:
 				return {}, {0: "Reference [" + name + "] has an incorrect naming format! A reference name consists of a prefix ""R"" + a number or letter."}
@@ -107,15 +107,20 @@ class xmlTool():
 				prevNum = currNum
 
 				# Add on references has no wires attached to
-				if not numberS in wireSDCount:
-					wireSDCount[numberS] = {'s': [], 'd': []}
+				if 0 not in wireSDCount:
+					if not numberS in wireSDCount:
+						wireSDCount[numberS] = {'s': [], 'd': []}
 
 			# Check if reference is out of bounds
-			for point in points:
-				x = point.find('XPosition').text
-				y = point.find('YPosition').text
-				if float(x) <= cls.xMin or float(x) >= cls.xMax  or float(y) <= cls.yMin  or float(y) >= cls.yMax :
-					return {}, {0: name +" location out of bounds.\n-295 mm < X < 1 mm\n   0 mm < Y < 275 mm"}
+			for pointE in pointEs:
+				x = pointE.find('XPosition').text
+				y = pointE.find('YPosition').text
+				if float(x) <= cls.xMin or float(x) >= cls.xMax  or float(y) <= cls.yMin  or float(y) >= cls.yMax:
+					return {}, {0: name +" location out of bounds!\n-295 mm < X < 1 mm\n   0 mm < Y < 275 mm"}
+
+		# Check location error
+		if 0 in wireSDCount:
+			return {}, wireSDCount
 
 		# Compress references information into a dictionary
 		referenceInfo = {'name': refName,'type': typ, 'dependon': dependon, 'gap': refNameGap, 'repeats': checkRepeats(refName), 'pseudo': pseudoRef}
@@ -140,12 +145,19 @@ class xmlTool():
 		# Get total number of wires
 		wireSDInfo = {'total': len(wireElements)}
 		for wireIndex in range(0, len(wireElements)):
+			# Check if location out of bounds
+			bondEs = wireElements[wireIndex].findall('Bond')
+			for bondE in bondEs:
+				x = bondE.find('XPosition').text
+				y = bondE.find('YPosition').text
+				if float(x) <= cls.xMin or float(x) >= cls.xMax  or float(y) <= cls.yMin  or float(y) >= cls.yMax:
+					return {0: 'Wire ' + str((wireIndex + 1)) + ' location out of bounds!\n-295 mm < X < 1 mm\n   0 mm < Y < 275 mm'}
 			# Get reference number in string without prefix('R') for source
 			# source = re.findall('\d+', wireElements[wireIndex].findall('Bond')[0].find('Refsys').text)[0] 
-			source = wireElements[wireIndex].findall('Bond')[0].find('Refsys').text[cls.prefixLen:]
+			source = bondEs[0].find('Refsys').text[cls.prefixLen:]
 			# Get reference number in string without prefix('R') for desination
 			# destination = re.findall('\d+', wireElements[wireIndex].findall('Bond')[1].find('Refsys').text)[0]
-			destination = wireElements[wireIndex].findall('Bond')[1].find('Refsys').text[cls.prefixLen:]
+			destination = bondEs[1].find('Refsys').text[cls.prefixLen:]
 			# Add reference name as source into the dictionary with wire index
 			if source in wireSDInfo:
 				wireSDInfo[source]['s'].append(wireIndex)
