@@ -153,6 +153,7 @@ class excelSheet():
 				worksheet.data_validation(self.realRefC + pseudoRefRowS, {'validate': 'custom', 'value': pseudoRefFormula, 'error_title': 'Warning', 'error_message': 'Reference does not exist or Duplicates!', 'error_type': 'stop'})
 				pseudoRefRowS = str(int(pseudoRefRowS) + 1)
 
+		typeList = ['Default','NEWBENCH', 'AVX_S', 'AVX_D', 'PRSID_S', 'PRSID_D', 'TECDIA_S', 'TECDIA_D', 'PKGFLOOR', 'IC_S', 'IC_D', 'SIGE', 'RESIST_S', 'RESIST_D', 'TF_S', 'TF_D', 'COIN_S', 'COIN_D']
 		refGapSet = set(refGap)
 		refNumber = 1	
 		refListIndex = 0
@@ -178,6 +179,8 @@ class excelSheet():
 					f2 = 'COUNTIF($' + self.hiddenRefC + '$1' + ':$' + self.hiddenRefC + '$' + lastHiddenRefRow + ',' + self.copyC + rowS + ')=1'
 					countFormula = '=AND(' + f1 + ', ' + f2 + ')'
 					worksheet.data_validation(self.copyC + rowS, {'validate': 'custom', 'value': countFormula, 'error_title': 'Warning', 'error_message': 'Reference number does not exist or Duplicates!', 'error_type': 'stop'}) 
+					# Data validation for types
+					worksheet.data_validation(self.typeC + rowS, {'validate': 'list', 'source': typeList, 'error_title': 'Warning', 'error_message': 'Type does not exist in the library!', 'error_type': 'stop'}) 
 				else:  ### existing ref row
 					worksheet.write(self.statusC + rowS, self.eTag, existingWhiteBlockedF)
 					worksheet.write(self.refC + rowS, refNumber, centerF)
@@ -188,6 +191,8 @@ class excelSheet():
 					### data validation for dep
 					listF = 'COUNTIF($' + self.hiddenRefC + '$1' + ':$' + self.hiddenRefC + '$' + lastHiddenRefRow + ',' + self.depC + rowS + ')=1'
 					worksheet.data_validation(self.depC + rowS, {'validate': 'custom', 'value': listF, 'error_title': 'Warning', 'error_message': 'Reference does not exist!', 'error_type': 'stop'})
+					# Data validation for types
+					worksheet.data_validation(self.typeC + rowS, {'validate': 'list', 'source': typeList, 'error_title': 'Warning', 'error_message': 'Type does not exist in the library!', 'error_type': 'stop'}) 
 					### formulas for Wire new D Count cell
 					wireRefSCount = len(wireSDInfo[str(refNumber)]['s'])
 					wireRefDCount = len(wireSDInfo[str(refNumber)]['d'])
@@ -237,7 +242,9 @@ class excelSheet():
 				f2 = 'COUNTIF($' + self.hiddenRefC + '$1' + ':$' + self.hiddenRefC + '$' + lastHiddenRefRow + ',' + self.copyC + rowS + ')=1'
 				countFormula = '=AND(' + f1 + ', ' + f2 + ')'
 				worksheet.data_validation(self.copyC + rowS, {'validate': 'custom', 'value': countFormula, 'error_title': 'Warning', 'error_message': 'Reference number does not exist or Duplicates!', 'error_type': 'stop'})
-					
+				# Data validation for types
+				worksheet.data_validation(self.typeC + rowS, {'validate': 'list', 'source': typeList, 'error_title': 'Warning', 'error_message': 'Type does not exist in the library!', 'error_type': 'stop'}) 	
+			
 			refNumber = refNumber + 1
 		### hidden info in excel sheet
 		if not refGap or int(fstAppendRow) > int(lastAppendRow): ### meaning no gaps or no appending section:
