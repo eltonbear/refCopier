@@ -267,6 +267,7 @@ class xmlTool():
 		# Get numbers of references and wires
 		numOfRef = len(referenceE)
 		numOfWire = len(wireE)
+		referenceEDict = {}
 
 		for r in referenceE: 
 			# Get name of the reference
@@ -296,6 +297,7 @@ class xmlTool():
 					# If there is depenon originally, but not in Excel sheet, remove dependon element in XML
 					if r.find('Dependon') != None:
 						r.remove(r.find('Dependon'))
+				referenceEDict[refNumber] = r
 
 		# Read wire source and destination information, see function readWieSDInfo
 		wireSDInfo = xmlTool.readWireSDInfo(wireE)
@@ -330,7 +332,7 @@ class xmlTool():
 			# Get reference name to be copied
 			refNameToCopy = addRefDict[nName][0]
 			# Get a new reference element 
-			copy = writeARefCopy(refNameToCopy, nName, addRefDict[nName][1], cls.prefix)
+			copy = writeARefCopy(referenceEDict[refNameToCopy], refNameToCopy, nName, addRefDict[nName][1], cls.prefix)
 			# Insert into reference tree
 			root.insert(int(nName)-1, copy)
 			# Change wire destination
@@ -341,7 +343,7 @@ class xmlTool():
 		tree.write(newXmlFilePath)
 		return newXmlFilePath
 
-def writeARefCopy(oldName, newName, typ, prefix): 
+def writeARefCopy(refEToCopy, oldName, newName, typ, prefix): 
 	"""Create a referece element (no points).
 
 		Parameters
@@ -360,7 +362,6 @@ def writeARefCopy(oldName, newName, typ, prefix):
 		newRefEle: Element
 			New reference element.
 	"""
-
 	# Creat a new referenceSystem node
 	newRefEle = Element('ReferenceSystem')
 	# Creat a sub-element for name in reference
@@ -372,6 +373,8 @@ def writeARefCopy(oldName, newName, typ, prefix):
 	# Creat a sub-element for dependon in reference
 	newDepEle = SubElement(newRefEle, 'Dependon')
 	newDepEle.text = prefix + oldName
+	# Copy over the first point
+	newRefEle.append(refEToCopy.findall('Point')[0])
 	# Formatting xml text so it prints nicly 
 	indent(newRefEle, 1)
 	# Return the reference(address) of the new reference element
